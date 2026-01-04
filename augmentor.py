@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 import cv2
 import numpy as np
+import random
 
 class augmentor():
     def __init__(self,input_img_path,input_label_path,output_img_path,output_label_path,times):
@@ -125,23 +126,97 @@ class flippedAugmentor(augmentor):
     def action(self):
         pass
 
-class saturationAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,saturation_threshold):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path)
+class saturationIncreasedAugmentor(augmentor):
+    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,times,saturation_threshold):
+        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path,times)
         self.saturation_threshold = saturation_threshold
-    def action(self):
-        pass
 
-class saltAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,noise):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path)
-        self.noise = noise
     def action(self):
-        pass
+        label_filename_list = os.listdir(self.input_label_path)
+        img_filename_list = os.listdir(self.input_img_path)
+        for filename in label_filename_list:
+            if filename.endswith(".txt"):
+                for i in range(self.times):
+                    label_output_filename = "SAI_"+ f"{i}_" + filename
+                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+        
+        for filename in img_filename_list:
+            if filename.endswith(".jpg"):
+                img = cv2.imread(os.path.join(self.input_img_path,filename))
+                hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+                s_channel = hsv[:,:,1]
+                for i in range(self.times):
+                    s = s_channel
+                    hsv_copy = hsv
+                    saturation_factor = np.random.randint(5,self.saturation_threshold)
+                    s += saturation_factor
+                    hsv_copy [:,:,1] = s
+                    augmented_image = cv2.cvtColor(hsv_copy,cv2.COLOR_HSV2BGR)
+                    img_output_filename = "SAI_" + f"{i}_" + filename
+                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                    cv2.imwrite(img_output_path,augmented_image)
 
-class pepperAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,noise):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path)
-        self.noise = noise
+class saturationDecreasedAugmentor(augmentor):
+    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,times,saturation_threshold):
+        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path,times)
+        self.saturation_threshold = saturation_threshold
+
     def action(self):
-        pass
+        label_filename_list = os.listdir(self.input_label_path)
+        img_filename_list = os.listdir(self.input_img_path)
+        for filename in label_filename_list:
+            if filename.endswith(".txt"):
+                for i in range(self.times):
+                    label_output_filename = "SAD_"+ f"{i}_" + filename
+                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+        
+        for filename in img_filename_list:
+            if filename.endswith(".jpg"):
+                img = cv2.imread(os.path.join(self.input_img_path,filename))
+                hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+                s_channel = hsv[:,:,1]
+                for i in range(self.times):
+                    s = s_channel
+                    hsv_copy = hsv
+                    saturation_factor = np.random.randint(5,self.saturation_threshold)
+                    s -= saturation_factor
+                    hsv_copy [:,:,1] = s
+                    augmented_image = cv2.cvtColor(hsv_copy,cv2.COLOR_HSV2BGR)
+                    img_output_filename = "SAD_" + f"{i}_" + filename
+                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                    cv2.imwrite(img_output_path,augmented_image)
+
+
+class salt_and_pepperAugmentor(augmentor):
+    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times,noise_max):
+        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
+        self.noise_max = noise_max
+    def action(self):
+        label_filename_list = os.listdir(self.input_label_path)
+        img_filename_list = os.listdir(self.input_img_path)
+        for filename in label_filename_list:
+            if filename.endswith(".txt"):
+                for i in range(self.times):
+                    label_output_filename = "SPD_"+ f"{i}_" + filename
+                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+        
+        for filename in img_filename_list:
+            if filename.endswith(".jpg"):
+                img = cv2.imread(os.path.join(self.input_img_path,filename))
+                
+                for i in range(self.times):
+                    noise = random.randint(20,self.noise_max)
+                    noisy_image = img.copy()
+                    noise /= 1000
+                    salt_prob = noise / 2
+                    pepper_prob = noise / 2
+                    salt_mask = np.random.random(img.shape[:2]) < salt_prob
+                    noisy_image[salt_mask] = 255
+                    pepper_mask = np.random.random(img.shape[:2]) < pepper_prob
+                    noisy_image[pepper_mask] = 0
+                    img_output_filename = "SP_" + f"{i}_" + filename
+                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                    cv2.imwrite(img_output_path,noisy_image)
