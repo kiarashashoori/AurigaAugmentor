@@ -33,6 +33,8 @@ class app(App):
         for i in range(len(options)):
             lbl = Label(text=options[i],size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos_hint = (None,None))
             chk = CheckBox(active=False,size_hint = (None,None),pos_hint = (None,None))
+            chk.id = options[i]
+            chk.bind(active = self.checkbox_is_active)
             checkbox_layout.add_widget(lbl)
             checkbox_layout.add_widget(chk)
 
@@ -40,7 +42,8 @@ class app(App):
 
         
         confirm_layout = AnchorLayout(anchor_x='center', anchor_y='bottom')
-        confirm_btn = Button(text='start',size_hint = (None,None),size = ("75dp","40dp"),background_normal='',background_color=(0,0.8,0.3,1))
+        confirm_btn = Button(text='start',size_hint = (None,None),size = ("75dp","40dp"),on_press = self.clicked,
+                             background_normal='',background_color=(0,0.8,0.3,1))
         confirm_layout.add_widget(confirm_btn)
 
         image_layout = AnchorLayout(anchor_x='right', anchor_y='bottom')
@@ -52,6 +55,16 @@ class app(App):
         screen_layout.add_widget(checkbox_layout)
         screen_layout.add_widget(image_layout)
         return screen_layout
+    
+    def checkbox_is_active(self,checkbox,value):
+        if value :
+            parameters.active_checkboxs.append(checkbox.id)
+        else :
+            parameters.active_checkboxs.remove(checkbox.id)
+    
+    def clicked(self,instance):
+        print(parameters.active_checkboxs)
+
     
 tb_values = parameters.path_values
 class PathBrowserApp(App):
@@ -213,6 +226,6 @@ class PathBrowserApp(App):
             self.popup.dismiss()
 
 if __name__ == '__main__':
-    root = PathBrowserApp()
+    root = app()
     root.run()
 
