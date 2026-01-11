@@ -254,20 +254,12 @@ class augmentViewerApp(App):
             pass
 
         possible_images = os.listdir(parameters.path_values[0])
-        images = []
-        i = 0
+        self.images = []
+        self.i = 0
         for image in possible_images:
             if image.endswith(".jpg"):
-                images.append(image)
-
-        image_path = os.path.join(parameters.path_values[0],images[i])
-        shutil.copy2(image_path,"cache/input_img.jpg")
-        
-        img = cv2.imread("cache/input_img.jpg")
-        if (parameters.active_checkboxs[0] == 'increase brightness'):
-            sample_img = augmentor.brightnessIncreasedAugmentor(img,50,'sample')
-            
-        cv2.imwrite("cache/output_img.jpg",sample_img)
+                self.images.append(image)
+        augmentViewerApp.create_sample(self)
         auriga_image_layout = AnchorLayout(anchor_x='right', anchor_y='bottom')
         auriga_image = Image(source = 'Auriga.png',size_hint = (None,None))
         auriga_image_layout.add_widget(auriga_image)
@@ -277,10 +269,55 @@ class augmentViewerApp(App):
         self.image = Image(source = "cache/output_img.jpg",size_hint = (0.8,0.6))
         image_layout.add_widget(self.image)
 
+        right_btn_layout = AnchorLayout(anchor_x='right', anchor_y='center')
+        right_btn = Button(text='>',size_hint = (None,None),size=("40dp","40dp"),
+                           on_press = self.right_clicked)
+        right_btn_layout.add_widget(right_btn)
+
+        left_btn_layout = AnchorLayout(anchor_x='left', anchor_y='center')
+        left_btn = Button(text='<',size_hint = (None,None),size=("40dp","40dp"),
+                          on_press = self.left_clicked)
+        left_btn_layout.add_widget(left_btn)
+
+        confirm_layout = AnchorLayout(anchor_x='center', anchor_y='bottom')
+        confirm_btn = Button(text='confirm',size_hint = (None,None),size = ("75dp","40dp"),
+                             background_normal='',background_color=(0,0.8,0.3,1))
+        confirm_layout.add_widget(confirm_btn)
+
         screen_layout = FloatLayout()
         screen_layout.add_widget(auriga_image_layout)
         screen_layout.add_widget(image_layout)
+        screen_layout.add_widget(right_btn_layout)
+        screen_layout.add_widget(left_btn_layout)
+        screen_layout.add_widget(confirm_layout)
+
+
         return screen_layout
+    def right_clicked(self,instance):
+        if self.i + 1< len(self.images):
+            self.i += 1
+        else :
+            self.i = 0
+        augmentViewerApp.create_sample(self)
+        self.image.reload()
+    def left_clicked(self,instance):
+        if self.i > 0:
+            self.i -= 1
+        else :
+            self.i = len(self.images)-1
+        augmentViewerApp.create_sample(self)
+        self.image.reload()
+
+    def create_sample(self):
+        image_path = os.path.join(parameters.path_values[0],self.images[self.i])
+        shutil.copy2(image_path,"cache/input_img.jpg")
+        
+        img = cv2.imread("cache/input_img.jpg")
+        if (parameters.active_checkboxs[0] == 'increase brightness'):
+            sample_img = augmentor.brightnessIncreasedAugmentor(img,50,'sample')
+            
+        cv2.imwrite("cache/output_img.jpg",sample_img)
+            
         
 if __name__ == '__main__':
     root = augmentSelectorApp()
