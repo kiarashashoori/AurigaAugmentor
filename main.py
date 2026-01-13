@@ -16,6 +16,7 @@ from kivy.core.window import Window
 import shutil
 from augmentor import augmentor
 import cv2
+import threading
 
 import parameters
 
@@ -229,7 +230,6 @@ class augmentSelectorApp(App):
         # print(parameters.active_checkboxs)
         if (len(parameters.active_checkboxs) >0):
             self.stop()
-            print(parameters.active_checkboxs)
             augmentViewerApp().run()
         else:
             popup_layout = BoxLayout(orientation='vertical', spacing=10)
@@ -268,7 +268,6 @@ class augmentViewerApp(App):
         Window.minimum_width = 1200
         Window.minimum_height = 800
     def build(self):
-        print('hi')
         if len(parameters.active_checkboxs) <= 0:
             pass
         
@@ -295,8 +294,12 @@ class augmentViewerApp(App):
         left_btn_layout.add_widget(left_btn)
 
         confirm_layout = AnchorLayout(anchor_x='center', anchor_y='bottom')
-        confirm_btn = Button(text='confirm',size_hint = (None,None),size = ("75dp","40dp"),
+        confirm_btn = Button(size_hint = (None,None),size = ("75dp","40dp"),
                              background_normal='',background_color=(0,0.8,0.3,1),on_press = self.confirm_clicked)
+        if len(parameters.active_checkboxs)> 1 :
+            confirm_btn.text = 'confirm'
+        else:
+            confirm_btn.text = 'start'
         confirm_layout.add_widget(confirm_btn)
 
         threshold_layout = FloatLayout()
@@ -388,12 +391,13 @@ class augmentViewerApp(App):
 
         if (len(parameters.active_checkboxs) > 1):
             parameters.active_checkboxs.pop(0)
-            print(parameters.augment_process)
             self.screen_layout.clear_widgets()
             augmentViewerApp().stop()
             augmentViewerApp().run()
         else :
-            pass
+            augmentViewerApp().stop()
+            augmentProcessApp().run()
+
         
     def create_sample(self):
         image_path = os.path.join(parameters.path_values[0],self.images[self.i])
@@ -417,7 +421,36 @@ class augmentViewerApp(App):
             
         cv2.imwrite("cache/output_img.jpg",sample_img)
             
-        
+class augmentProcessApp(App):
+    def on_start(self):
+        Window.size = (1200, 800)
+        Window.minimum_width = 1200
+        Window.minimum_height = 800
+    def build(self):
+        self.augmentProcessHandler()
+    def augmentProcessHandler(self):
+        threads = []
+        if len(parameters.augment_process) > 6:
+            for i in range(6):
+                aug = augmentor(parameters.path_values[0],parameters.path_values[1],parameters.path_values[2],
+                                    parameters.path_values[3],parameters.augment_process[i][1],parameters.augment_process[i][0])
+                t = threading.Thread(target=augmentor.action,args=(aug,parameters.augment_process[i][2]))
+                threads.append(t)
+            for _ in range(6):
+                parameters.augment_process.pop(0)
+        else :
+            for i in range(len(parameters.augment_process)):
+                aug = augmentor(parameters.path_values[0],parameters.path_values[1],parameters.path_values[2],
+                                    parameters.path_values[3],parameters.augment_process[i][1],parameters.augment_process[i][0])
+                t = threading.Thread(target=augmentor.action,args=(aug,parameters.augment_process[i][2]))
+                threads.append(t)
+            for _ in range(len(parameters.augment_process)):
+                parameters.augment_process.pop(0)
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+               
 if __name__ == '__main__':
     root = augmentSelectorApp()
     root.run()

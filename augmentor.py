@@ -15,11 +15,9 @@ class augmentor():
         self.times = times
         self.augment_type = augment_type
     
-    def action(self,brightness_threshold=50):
-        label_not_change = ['increase brightness', 'decrease brightness' ,'increase contrast',
-                   'decrease contrast','decrease saturation' , 'increase saturation' ,
-                   'salt&pepper', 'blur', 'vertical motion blur', 'horizental motion blur',
-                   'shadow', 'sunlight','hue']
+    def action(self,threshold=50):
+###################################################################################################
+###            BRIGHTNESS AUGMENT               ###
         if self.augment_type == 'increase brightness':
             ###copy and paste the labels###
             label_filename_list = os.listdir(self.input_label_path)
@@ -37,7 +35,7 @@ class augmentor():
                     for i in range(self.times):
                         img_output_filename = "BRI_" + f"{i}_" + filename
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
-                        augmented_image = augmentor.brightnessIncreasedAugmentor(self,img,brightness_threshold)
+                        augmented_image = augmentor.brightnessIncreasedAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)
         
         if self.augment_type == 'decrease brightness':
@@ -55,10 +53,95 @@ class augmentor():
                 if filename.endswith(".jpg"):
                     img = cv2.imread(os.path.join(self.input_img_path,filename))
                     for i in range(self.times):
-                        img_output_filename = "BRID" + f"{i}_" + filename
+                        img_output_filename = "BRD_" + f"{i}_" + filename
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
-                        augmented_image = augmentor.brightnessDecreasedAugmentor(self,img,brightness_threshold)
+                        augmented_image = augmentor.brightnessDecreasedAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)
+
+###################################################################################################
+###            CONTRAST AUGMENT               ###
+
+        if self.augment_type == 'decrease contrast':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    for i in range(self.times):
+                        label_output_filename = "CND_"+ f"{i}_" + filename
+                        label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                        shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    for i in range(self.times):
+                        img_output_filename = "CND_" + f"{i}_" + filename
+                        img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                        augmented_image = augmentor.contrastDecreasedAugmentor(img,threshold,'augment')
+                        cv2.imwrite(img_output_path,augmented_image)
+        if self.augment_type == 'increase contrast':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    for i in range(self.times):
+                        label_output_filename = "CNI_"+ f"{i}_" + filename
+                        label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                        shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    for i in range(self.times):
+                        img_output_filename = "CNI_" + f"{i}_" + filename
+                        img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                        augmented_image = augmentor.contrastIncreasedAugmentor(img,threshold,'augment')
+                        cv2.imwrite(img_output_path,augmented_image)
+
+###################################################################################################
+###            SATURATION AUGMENT               ###
+
+        if self.augment_type == 'decrease saturation':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    for i in range(self.times):
+                        label_output_filename = "SAD_"+ f"{i}_" + filename
+                        label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                        shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    for i in range(self.times):
+                        img_output_filename = "SAD_" + f"{i}_" + filename
+                        img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                        augmented_image = augmentor.saturationDecreasedAugmentor(img,threshold,'augment')
+                        cv2.imwrite(img_output_path,augmented_image)
+        if self.augment_type == 'increase saturation':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    for i in range(self.times):
+                        label_output_filename = "SAI_"+ f"{i}_" + filename
+                        label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                        shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    for i in range(self.times):
+                        img_output_filename = "SAI_" + f"{i}_" + filename
+                        img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                        augmented_image = augmentor.saturationIncreasedAugmentor(img,threshold,'augment')
+                        cv2.imwrite(img_output_path,augmented_image)           
+            
 
                 
     @staticmethod
@@ -227,67 +310,67 @@ class augmentor():
 #                     img_output_path = os.path.join(self.output_img_path,img_output_filename)
 #                     cv2.imwrite(img_output_path,augmented_image)
     
-class saturationIncreasedAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,times,saturation_threshold):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path,times)
-        self.saturation_threshold = saturation_threshold
+# class saturationIncreasedAugmentor(augmentor):
+#     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,times,saturation_threshold):
+#         super().__init__(input_img_path, input_label_path, output_img_path, output_label_path,times)
+#         self.saturation_threshold = saturation_threshold
 
-    def action(self):
-        label_filename_list = os.listdir(self.input_label_path)
-        img_filename_list = os.listdir(self.input_img_path)
-        for filename in label_filename_list:
-            if filename.endswith(".txt"):
-                for i in range(self.times):
-                    label_output_filename = "SAI_"+ f"{i}_" + filename
-                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
-                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+#     def action(self):
+#         label_filename_list = os.listdir(self.input_label_path)
+#         img_filename_list = os.listdir(self.input_img_path)
+#         for filename in label_filename_list:
+#             if filename.endswith(".txt"):
+#                 for i in range(self.times):
+#                     label_output_filename = "SAI_"+ f"{i}_" + filename
+#                     label_output_path = os.path.join(self.output_label_path , label_output_filename)
+#                     shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
         
-        for filename in img_filename_list:
-            if filename.endswith(".jpg"):
-                img = cv2.imread(os.path.join(self.input_img_path,filename))
-                hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-                s_channel = hsv[:,:,1]
-                for i in range(self.times):
-                    s = s_channel
-                    hsv_copy = hsv
-                    saturation_factor = np.random.randint(5,self.saturation_threshold)
-                    s += saturation_factor
-                    hsv_copy [:,:,1] = s
-                    augmented_image = cv2.cvtColor(hsv_copy,cv2.COLOR_HSV2BGR)
-                    img_output_filename = "SAI_" + f"{i}_" + filename
-                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
-                    cv2.imwrite(img_output_path,augmented_image)
+#         for filename in img_filename_list:
+#             if filename.endswith(".jpg"):
+#                 img = cv2.imread(os.path.join(self.input_img_path,filename))
+#                 hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+#                 s_channel = hsv[:,:,1]
+#                 for i in range(self.times):
+#                     s = s_channel
+#                     hsv_copy = hsv
+#                     saturation_factor = np.random.randint(5,self.saturation_threshold)
+#                     s += saturation_factor
+#                     hsv_copy [:,:,1] = s
+#                     augmented_image = cv2.cvtColor(hsv_copy,cv2.COLOR_HSV2BGR)
+#                     img_output_filename = "SAI_" + f"{i}_" + filename
+#                     img_output_path = os.path.join(self.output_img_path,img_output_filename)
+#                     cv2.imwrite(img_output_path,augmented_image)
 
-class saturationDecreasedAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,times,saturation_threshold):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path,times)
-        self.saturation_threshold = saturation_threshold
+# class saturationDecreasedAugmentor(augmentor):
+#     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path,times,saturation_threshold):
+#         super().__init__(input_img_path, input_label_path, output_img_path, output_label_path,times)
+#         self.saturation_threshold = saturation_threshold
 
-    def action(self):
-        label_filename_list = os.listdir(self.input_label_path)
-        img_filename_list = os.listdir(self.input_img_path)
-        for filename in label_filename_list:
-            if filename.endswith(".txt"):
-                for i in range(self.times):
-                    label_output_filename = "SAD_"+ f"{i}_" + filename
-                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
-                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+#     def action(self):
+#         label_filename_list = os.listdir(self.input_label_path)
+#         img_filename_list = os.listdir(self.input_img_path)
+#         for filename in label_filename_list:
+#             if filename.endswith(".txt"):
+#                 for i in range(self.times):
+#                     label_output_filename = "SAD_"+ f"{i}_" + filename
+#                     label_output_path = os.path.join(self.output_label_path , label_output_filename)
+#                     shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
         
-        for filename in img_filename_list:
-            if filename.endswith(".jpg"):
-                img = cv2.imread(os.path.join(self.input_img_path,filename))
-                hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-                s_channel = hsv[:,:,1]
-                for i in range(self.times):
-                    s = s_channel
-                    hsv_copy = hsv
-                    saturation_factor = np.random.randint(5,self.saturation_threshold)
-                    s -= saturation_factor
-                    hsv_copy [:,:,1] = s
-                    augmented_image = cv2.cvtColor(hsv_copy,cv2.COLOR_HSV2BGR)
-                    img_output_filename = "SAD_" + f"{i}_" + filename
-                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
-                    cv2.imwrite(img_output_path,augmented_image)
+#         for filename in img_filename_list:
+#             if filename.endswith(".jpg"):
+#                 img = cv2.imread(os.path.join(self.input_img_path,filename))
+#                 hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+#                 s_channel = hsv[:,:,1]
+#                 for i in range(self.times):
+#                     s = s_channel
+#                     hsv_copy = hsv
+#                     saturation_factor = np.random.randint(5,self.saturation_threshold)
+#                     s -= saturation_factor
+#                     hsv_copy [:,:,1] = s
+#                     augmented_image = cv2.cvtColor(hsv_copy,cv2.COLOR_HSV2BGR)
+#                     img_output_filename = "SAD_" + f"{i}_" + filename
+#                     img_output_path = os.path.join(self.output_img_path,img_output_filename)
+#                     cv2.imwrite(img_output_path,augmented_image)
 
 class salt_and_pepperAugmentor(augmentor):
     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times,noise_max):
