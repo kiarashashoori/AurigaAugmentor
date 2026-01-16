@@ -140,7 +140,30 @@ class augmentor():
                         img_output_filename = "SAI_" + f"{i}_" + filename
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
                         augmented_image = augmentor.saturationIncreasedAugmentor(img,threshold,'augment')
-                        cv2.imwrite(img_output_path,augmented_image)           
+                        cv2.imwrite(img_output_path,augmented_image)  
+
+###################################################################################################
+###            SALT & PEPPER AUGMENT               ###        
+                   
+        if self.augment_type == 'salt&pepper':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    for i in range(self.times):
+                        label_output_filename = "SP_"+ f"{i}_" + filename
+                        label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                        shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    for i in range(self.times):
+                        img_output_filename = "SP_" + f"{i}_" + filename
+                        img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                        augmented_image = augmentor.saltPepperAugmentor(img,threshold,'augment')
+                        cv2.imwrite(img_output_path,augmented_image)       
             
 
                 
@@ -206,6 +229,23 @@ class augmentor():
             hsv_copy [:,:,1] = s
         augmented_image = cv2.cvtColor(hsv_copy,cv2.COLOR_HSV2BGR)
         return augmented_image
+    @staticmethod
+    def saltPepperAugmentor(img,noise_level,mode):
+        if mode == 'augment':
+            noise = random.randint(10,noise_level)  
+        elif mode == 'sample':
+            noise = noise_level
+        augmented_image = img
+        noise /= 1000
+        salt_prob = noise / 2
+        pepper_prob = noise / 2
+        salt_mask = np.random.random(img.shape[:2]) < salt_prob
+        augmented_image[salt_mask] = 255
+        pepper_mask = np.random.random(img.shape[:2]) < pepper_prob
+        augmented_image[pepper_mask] = 0
+
+        return augmented_image
+
         
 
 # class brightnessIncreasedAugmentor(augmentor):
