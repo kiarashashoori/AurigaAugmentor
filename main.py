@@ -190,7 +190,7 @@ class augmentSelectorApp(App):
     def build(self):
         options = ['increase brightness', 'decrease brightness' ,'increase contrast',
                    'decrease contrast','decrease saturation' , 'increase saturation' ,
-                   'salt&pepper', 'blur', 'vertical motion blur', 'horizental motion blur',
+                   'salt&pepper', 'blur', 'vertical motion blur', 'horizontal motion blur',
                    'shadow', 'sunlight', 'rotate' , 'flipped' , 'hue']
 
         checkbox_layout = StackLayout(orientation ='lr-tb')
@@ -260,6 +260,9 @@ class augmentViewerApp(App):
 
         self.blur_threshold = 5
 
+        self.horizontal_blur_threshold = 25
+        self.vertical_blur_threshold = 25
+
         self.b = 50
 
         self.i = 0
@@ -325,7 +328,13 @@ class augmentViewerApp(App):
         if (parameters.active_checkboxs[0] == 'blur'):
             self.threshold = TextInput(text = str(self.blur_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
                                     multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
-
+        if (parameters.active_checkboxs[0] == 'horizontal motion blur'):
+            self.threshold = TextInput(text = str(self.horizontal_blur_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
+                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+        if (parameters.active_checkboxs[0] == 'vertical motion blur'):
+            self.threshold = TextInput(text = str(self.vertical_blur_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
+                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+            
         lbl = Label(text=parameters.active_checkboxs[0],pos=(20,100),size_hint = (None,None))
         self.times = TextInput(text = '1',size_hint = (None,None),size=("50dp","30dp"),pos=(100,100),
                                     multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
@@ -388,6 +397,11 @@ class augmentViewerApp(App):
         if (parameters.active_checkboxs[0] == 'blur'):
             self.blur_threshold = int(self.threshold.text)
 
+        if (parameters.active_checkboxs[0] == 'horizontal motion blur'):
+            self.horizontal_blur_threshold = int(self.threshold.text)
+        if (parameters.active_checkboxs[0] == 'vertical motion blur'):
+            self.vertical_blur_threshold = int(self.threshold.text)
+
         augmentViewerApp.create_sample(self)
         self.image.reload()
 
@@ -412,6 +426,11 @@ class augmentViewerApp(App):
         
         if (parameters.active_checkboxs[0] == 'blur'):
             parameters.augment_process.append(('blur',int(self.times.text),self.blur_threshold))
+
+        if (parameters.active_checkboxs[0] == 'horizontal motion blur'):
+            parameters.augment_process.append(('horizontal motion blur',int(self.times.text),self.horizontal_blur_threshold))
+        if (parameters.active_checkboxs[0] == 'vertical motion blur'):
+            parameters.augment_process.append(('vertical motion blur',int(self.times.text),self.vertical_blur_threshold))
 
         if (len(parameters.active_checkboxs) > 1):
             parameters.active_checkboxs.pop(0)
@@ -448,6 +467,11 @@ class augmentViewerApp(App):
         
         if (parameters.active_checkboxs[0] == 'blur'):
             sample_img = augmentor.blurAugmentor(img,self.blur_threshold,'sample')
+        
+        if (parameters.active_checkboxs[0] == 'horizontal motion blur'):
+            sample_img = augmentor.shakeHorizontalBlurAugmentor(img,self.horizontal_blur_threshold,'sample')
+        if (parameters.active_checkboxs[0] == 'vertical motion blur'):
+            sample_img = augmentor.shakeVerticalBlurAugmentor(img,self.vertical_blur_threshold,'sample')
             
         cv2.imwrite("cache/output_img.jpg",sample_img)
             

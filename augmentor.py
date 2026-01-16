@@ -166,7 +166,8 @@ class augmentor():
                         cv2.imwrite(img_output_path,augmented_image)   
 
 ###################################################################################################
-###            BlUR AUGMENT               ###    
+###            BlUR AUGMENT               ### 
+   
         if self.augment_type == 'blur':
             ###copy and paste the labels###
             label_filename_list = os.listdir(self.input_label_path)
@@ -184,7 +185,45 @@ class augmentor():
                     img_output_path = os.path.join(self.output_img_path,img_output_filename)
                     augmented_image = augmentor.blurAugmentor(img,threshold,'augment')
                     cv2.imwrite(img_output_path,augmented_image)    
+                    
+###################################################################################################
+###            MOTION BLUR AUGMENT               ###   
 
+        if self.augment_type == 'vertical motion blur':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    label_output_filename = "VBLR_"+ filename
+                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    img_output_filename = "VBLR_" + filename
+                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                    augmented_image = augmentor.shakeVerticalBlurAugmentor(img,threshold,'augment')
+                    cv2.imwrite(img_output_path,augmented_image)
+        
+        if self.augment_type == 'horizontal motion blur':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    label_output_filename = "HBLR_"+ filename
+                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    img_output_filename = "HBLR_" + filename
+                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                    augmented_image = augmentor.shakeHorizontalBlurAugmentor(img,threshold,'augment')
+                    cv2.imwrite(img_output_path,augmented_image)
                 
     @staticmethod
     def brightnessIncreasedAugmentor(img,brightness_threshold,mode):
@@ -268,30 +307,20 @@ class augmentor():
     def blurAugmentor(img,threshold,_):
         augmented_image = cv2.blur(img,(threshold,threshold))
         return augmented_image
-
-class blurAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times,ksize):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
-        self.ksize = ksize
-
-    def action(self):
-        label_filename_list = os.listdir(self.input_label_path)
-        img_filename_list = os.listdir(self.input_img_path)
-        for filename in label_filename_list:
-            if filename.endswith(".txt"):
-                for i in range(self.times):
-                    label_output_filename = "BLR_"+ f"{i}_" + filename
-                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
-                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
-        for filename in img_filename_list:
-            if filename.endswith(".jpg"):
-                img = cv2.imread(os.path.join(self.input_img_path,filename))
-                for i in range(self.times):
-                    img_copy = img.copy()
-                    img_copy = cv2.blur(img_copy,(self.ksize,self.ksize))
-                    img_output_filename = "BLR_" + f"{i}_" + filename
-                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
-                    cv2.imwrite(img_output_path,img_copy)
+    @staticmethod
+    def shakeVerticalBlurAugmentor(img,threshold,_):
+        kernel_v = np.zeros((threshold, threshold))
+        kernel_v[:, int((threshold - 1)/2)] = np.ones(threshold)
+        kernel_v /= threshold
+        augmented_image = cv2.filter2D(img, -1, kernel_v)
+        return augmented_image
+    @staticmethod
+    def shakeHorizontalBlurAugmentor(img,threshold,_):
+        kernel_h = np.zeros((threshold, threshold))
+        kernel_h[int((threshold - 1)/2), :] = np.ones(threshold)
+        kernel_h /= threshold
+        augmented_image = cv2.filter2D(img, -1, kernel_h)
+        return augmented_image
 
 class shakeVerticalBlurAugmentor(augmentor):
     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
