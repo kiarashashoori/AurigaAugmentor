@@ -23,12 +23,40 @@ import parameters
 import os
     
 tb_values = parameters.path_values
-class PathBrowserApp(App):
+
+class appSelectorApp(App):
     def on_start(self):
         Window.minimum_width = 1000
         Window.minimum_height = 600
         Window.size = (1000, 600)
-        
+    def build(self):
+        Datacleaner_btn = Button(text='Data cleaner',size_hint = (None,None),size=("100dp","20dp")
+                                    ,pos=(450,100),on_press=self.btn_clicked)
+        Augmentor_btn = Button(text='Augmentor',size_hint = (None,None),size=("100dp","20dp")
+                                    ,pos=(450,300),on_press=self.btn_clicked)
+        DataAnalysis_btn = Button(text='Data analysis',size_hint = (None,None),size=("100dp","20dp")
+                                    ,pos=(450,500),on_press=self.btn_clicked)
+        floatlayout = FloatLayout()
+        floatlayout.add_widget(Datacleaner_btn)
+        floatlayout.add_widget(DataAnalysis_btn)
+        floatlayout.add_widget(Augmentor_btn)
+        return floatlayout
+    def btn_clicked(self,instance):
+        if instance.text == "Augmentor":
+            self.stop()
+            augmentorPathBrowserApp().run()
+        elif instance.text == "Data cleaner":
+            pass
+        elif instance.text == "Data analysis":
+            pass
+
+
+class augmentorPathBrowserApp(App):
+    def on_start(self):
+        Window.minimum_width = 1000
+        Window.minimum_height = 600
+        Window.size = (1000, 600)
+    
     
 
     def build(self):
@@ -508,6 +536,6 @@ class augmentProcessApp(App):
             augmentProcessApp.augmentProcessHandler(self)
                
 if __name__ == '__main__':
-    root = augmentSelectorApp()
+    root = appSelectorApp()
     root.run()
 
