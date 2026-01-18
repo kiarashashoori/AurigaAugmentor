@@ -350,7 +350,7 @@ class augmentor():
     def flippedAugmentor(img,label_content,mode):
         if mode == 'augment':
             augmented_image = cv2.flip(img,1)
-            
+            size = img.shape
             augmented_label_list = []
             if parameters.augmentor_mode == 'sign':
                 for line in label_content:
@@ -361,6 +361,20 @@ class augmentor():
                     augmented_label += ' '
                     for content in line.split()[2:]:
                         augmented_label += content
+                        augmented_label += ' '
+                    augmented_label = augmented_label[:len(augmented_label)-1]
+                    augmented_label += '\n'
+                    augmented_label_list.append(augmented_label)
+            
+            if parameters.augmentor_mode == 'line':
+                for line in label_content:
+                    augmented_label = ''
+                    line_content = line.split()
+                    for i in range(len(line_content)):
+                        if i % 2 == 0:
+                            augmented_label += line_content[i]
+                        else:
+                            augmented_label += str(size[1] - float(line_content[i]))
                         augmented_label += ' '
                     augmented_label = augmented_label[:len(augmented_label)-1]
                     augmented_label += '\n'
