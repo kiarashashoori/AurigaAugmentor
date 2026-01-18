@@ -560,8 +560,8 @@ class augmentViewerApp(App):
         apply_btn = Button(text='apply',size_hint = (None,None),size = ("75dp","40dp"),
                              background_normal='',background_color=(0,0.8,0.3,1),pos=(800,100),on_press = self.apply_clicked)
         
-        
-        threshold_layout.add_widget(self.threshold)
+        if parameters.active_checkboxs[0] in ['flipped'] == False:
+            threshold_layout.add_widget(self.threshold)
         threshold_layout.add_widget(apply_btn)
         threshold_layout.add_widget(self.times)
         threshold_layout.add_widget(lbl)
@@ -650,6 +650,8 @@ class augmentViewerApp(App):
             parameters.augment_process.append(('horizontal motion blur',int(self.times.text),self.horizontal_blur_threshold))
         if (parameters.active_checkboxs[0] == 'vertical motion blur'):
             parameters.augment_process.append(('vertical motion blur',int(self.times.text),self.vertical_blur_threshold))
+        if (parameters.active_checkboxs[0] == 'flipped'):
+            parameters.augment_process.append(('flipped',None,None))
 
         if (len(parameters.active_checkboxs) > 1):
             parameters.active_checkboxs.pop(0)
@@ -691,6 +693,8 @@ class augmentViewerApp(App):
             sample_img = augmentor.shakeHorizontalBlurAugmentor(img,self.horizontal_blur_threshold,'sample')
         if (parameters.active_checkboxs[0] == 'vertical motion blur'):
             sample_img = augmentor.shakeVerticalBlurAugmentor(img,self.vertical_blur_threshold,'sample')
+        if (parameters.active_checkboxs[0] == 'flipped'):
+            sample_img = augmentor.flippedAugmentor(img,None,'sample')
             
         cv2.imwrite("cache/output_img.jpg",sample_img)
             

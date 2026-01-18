@@ -4,7 +4,7 @@ import shutil
 import cv2
 import numpy as np
 import random
-import threading
+import parameters
 
 class augmentor():
     def __init__(self,input_img_path,input_label_path,output_img_path,output_label_path,times,augment_type):
@@ -224,7 +224,32 @@ class augmentor():
                     img_output_path = os.path.join(self.output_img_path,img_output_filename)
                     augmented_image = augmentor.shakeHorizontalBlurAugmentor(img,threshold,'augment')
                     cv2.imwrite(img_output_path,augmented_image)
-                
+
+###################################################################################################
+###            FLIPPED AUGMENT               ###   
+        if self.augment_type == 'flipped':
+            print('hi')
+            label_filename_list = os.listdir(self.input_label_path)
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in label_filename_list:
+                if filename.endswith('.txt') and ((filename[:len(filename)-4]+'.jpg') in img_filename_list):
+                    with open(os.path.join(self.input_label_path,filename),'r') as f:
+                        lines = f.readlines()
+                    img = cv2.imread(os.path.join(self.input_img_path,((filename[:len(filename)-4]+'.jpg'))))
+                    img_output_filename = "FLP_" + (filename[:len(filename)-4]+'.jpg')
+                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                    augmented_image,augmented_label_list = augmentor.flippedAugmentor(img,lines,'augment') 
+                    cv2.imwrite(img_output_path,augmented_image)
+                    f.close()
+                    label_output_filename = "FLP_"+ filename
+                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                    print (augmented_label_list)
+                    with open(label_output_path,'w') as f:
+                        f.writelines(augmented_label_list)
+                    f.close()
+
+
+
     @staticmethod
     def brightnessIncreasedAugmentor(img,brightness_threshold,mode):
         if mode == 'augment':
@@ -321,46 +346,33 @@ class augmentor():
         kernel_h /= threshold
         augmented_image = cv2.filter2D(img, -1, kernel_h)
         return augmented_image
+    @staticmethod
+    def flippedAugmentor(img,label_content,mode):
+        if mode == 'augment':
+            augmented_image = cv2.flip(img,1)
+            
+            augmented_label_list = []
+            if parameters.augmentor_mode == 'sign':
+                for line in label_content:
+                    augmented_label = ''
+                    augmented_label += line.split()[0]
+                    augmented_label += ' '
+                    augmented_label += str(1 - float(line.split()[1]))
+                    augmented_label += ' '
+                    for content in line.split()[2:]:
+                        augmented_label += content
+                        augmented_label += ' '
+                    augmented_label = augmented_label[:len(augmented_label)-1]
+                    augmented_label += '\n'
+                    augmented_label_list.append(augmented_label)
+            return augmented_image,augmented_label_list
+        if mode == 'sample':
+            augmented_image = cv2.flip(img,1)
+            return augmented_image
 
-class shakeVerticalBlurAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
-    
-    def action(self):
-        kernel_size = 25
-        img = cv2.imread('cache/input_img.jpg')
-        # Create the vertical kernel.
-        kernel_v = np.zeros((kernel_size, kernel_size))
+        
+        
 
-        # Fill the middle row with ones.
-        kernel_v[:, int((kernel_size - 1)/2)] = np.ones(kernel_size)
-
-        # Normalize.
-        kernel_v /= kernel_size
-
-        # Apply the vertical kernel.
-        vertical_mb = cv2.filter2D(img, -1, kernel_v)
-
-        # Save the outputs.
-        # cv2.imwrite('car_vertical.jpg', vertical_mb)
-        # cv2.imwrite('car_horizontal.jpg', horizonal_mb)
-
-class shakeHorizentalBlurAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
-    
-    def action(self):
-        kernel_size = 25
-        img = cv2.imread('cache/input_img.jpg')
-        # Create the vertical kernel.
-        kernel_h = np.zeros((kernel_size, kernel_size))
-        kernel_h[int((kernel_size - 1)/2), :] = np.ones(kernel_size)
-
-        # Normalize.
-        kernel_h /= kernel_size
-
-        # Apply the horizontal kernel.
-        horizonal_mb = cv2.filter2D(img, -1, kernel_h)
         
 class shadowAugmentor(augmentor):
     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
