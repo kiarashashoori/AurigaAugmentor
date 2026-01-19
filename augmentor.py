@@ -228,7 +228,6 @@ class augmentor():
 ###################################################################################################
 ###            FLIPPED AUGMENT               ###   
         if self.augment_type == 'flipped':
-            print('hi')
             label_filename_list = os.listdir(self.input_label_path)
             img_filename_list = os.listdir(self.input_img_path)
             for filename in label_filename_list:
@@ -243,7 +242,27 @@ class augmentor():
                     f.close()
                     label_output_filename = "FLP_"+ filename
                     label_output_path = os.path.join(self.output_label_path , label_output_filename)
-                    print (augmented_label_list)
+                    with open(label_output_path,'w') as f:
+                        f.writelines(augmented_label_list)
+                    f.close()
+
+###################################################################################################
+###            ROTATE AUGMENT               ###   
+        if self.augment_type == 'rotate':
+            label_filename_list = os.listdir(self.input_label_path)
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in label_filename_list:
+                if filename.endswith('.txt') and ((filename[:len(filename)-4]+'.jpg') in img_filename_list):
+                    with open(os.path.join(self.input_label_path,filename),'r') as f:
+                        lines = f.readlines()
+                    img = cv2.imread(os.path.join(self.input_img_path,((filename[:len(filename)-4]+'.jpg'))))
+                    img_output_filename = "ROT_" + (filename[:len(filename)-4]+'.jpg')
+                    img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                    augmented_image,augmented_label_list = augmentor.rotateAugmentor(img,lines,threshold,'augment') 
+                    cv2.imwrite(img_output_path,augmented_image)
+                    f.close()
+                    label_output_filename = "ROT_"+ filename
+                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
                     with open(label_output_path,'w') as f:
                         f.writelines(augmented_label_list)
                     f.close()
@@ -383,9 +402,85 @@ class augmentor():
         if mode == 'sample':
             augmented_image = cv2.flip(img,1)
             return augmented_image
+    @staticmethod
+    def rotateAugmentor(img,label_content,angle,mode):
+        if mode == 'sample':
+            rotation_mat = cv2.getRotationMatrix2D((img.shape[1]//2,img.shape[0]//2),angle,1)
+            augmented_image = cv2.warpAffine(img,rotation_mat,(img.shape[1],img.shape[0]))
+            return augmented_image
+        if mode == 'augment':
+            rotation_mat = cv2.getRotationMatrix2D((img.shape[1]//2,img.shape[0]//2),angle,1)
+            augmented_image = cv2.warpAffine(img,rotation_mat,(img.shape[1],img.shape[0]))
+            size = img.shape
+            augmented_label_list = []
+            if parameters.augmentor_mode == 'sign':
+                for line in label_content:
+                    augmented_label = ''
+                    line_content = line.split()
+                    center_x,center_y = float(line_content[1]),float(line_content[2])
+                    width,height = float(line_content[3]),float(line_content[4])
+                    '''initial coordinates
+                    x0y0-------------------x1y1
+                      |                      |
+                      |                      |
+                      |                      |
+                      |                      |
+                      |                      |
+                    x2y2-------------------x3y3 
+                    '''
+                    initial_x_coordinates = (center_x-width/2,center_x+width/2,center_x-width/2,center_x-width/2)
+                    initial_y_coordinates = (1-center_y-height/2,1-center_y-height/2,1-center_y+height/2,1-center_y-height/2)
+                    initial_tetas = (np.arctan2(initial_y_coordinates[0],initial_x_coordinates[0]),
+                                     np.arctan2(initial_y_coordinates[1],initial_x_coordinates[1]),
+                                     np.arctan2(initial_y_coordinates[2],initial_x_coordinates[2]),
+                                     np.arctan2(initial_y_coordinates[3],initial_x_coordinates[3]))
+                    
+                    ###   my origin is bl
+                    distances_from_origin = (np.sqrt(initial_x_coordinates[0]**2+initial_y_coordinates[0]**2),
+                                             np.sqrt(initial_x_coordinates[1]**2+initial_y_coordinates[1]**2),
+                                             np.sqrt(initial_x_coordinates[2]**2+initial_y_coordinates[2]**2),
+                                             np.sqrt(initial_x_coordinates[3]**2+initial_y_coordinates[3]**2))
+                    
+                    secondary_tetas = (initial_tetas[0]+np.deg2rad(angle),initial_tetas[1]+np.deg2rad(angle),
+                                       initial_tetas[2]+np.deg2rad(angle),initial_tetas[3]+np.deg2rad(angle))
 
-        
-        
+                    secondary_x_coordinates = (distances_from_origin[0]*np.cos(secondary_tetas[0]),
+                                               distances_from_origin[1]*np.cos(secondary_tetas[1]),
+                                               distances_from_origin[2]*np.cos(secondary_tetas[2]),
+                                               distances_from_origin[3]*np.cos(secondary_tetas[3]))
+                    
+                    secondary_y_coordinates = (1-(distances_from_origin[0]*np.sin(secondary_tetas[0])),
+                                               1-(distances_from_origin[1]*np.sin(secondary_tetas[1])),
+                                               1-(distances_from_origin[2]*np.sin(secondary_tetas[2])),
+                                               1-(distances_from_origin[3]*np.sin(secondary_tetas[3])))
+                    
+                    minimum_x = min(secondary_x_coordinates)
+                    minimum_y = min(secondary_y_coordinates)
+                    maximum_x = max(secondary_x_coordinates)
+                    maximum_y = max(secondary_y_coordinates)
+
+                    # if (minimum_x < 0 or minimum_y < 0 or maximum_x > 1 or maximum_y > 1) == False:
+
+                    new_width,new_height = maximum_x - minimum_x,maximum_y-minimum_y
+                    print(minimum_x)
+                    new_center_x,new_center_y = minimum_x+new_width/2,minimum_y+new_height/2
+
+                    augmented_label += line.split()[0]
+                    augmented_label += ' '
+                    augmented_label += str(new_center_x)
+                    augmented_label += ' '
+                    augmented_label += str(new_center_y)
+                    augmented_label += ' '
+                    augmented_label += str(new_width)
+                    augmented_label += ' '
+                    augmented_label += str(new_height)
+                    augmented_label += '\n'
+                    augmented_label_list.append(augmented_label)
+
+
+            return augmented_image,augmented_label_list
+
+
 
         
 class shadowAugmentor(augmentor):
@@ -396,12 +491,6 @@ class sunlightAugmentor(augmentor):
     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
         super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
 
-class flippedAugmentor(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path)
-    def action(self):
-        pass
-
 class rotateAugmentor(augmentor):
     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
         super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
@@ -409,10 +498,3 @@ class rotateAugmentor(augmentor):
 class hueAugmentor (augmentor):
     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
         super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
-
-
-class augmentorTest(augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
-
-# augmentorTest('','','','',None)
