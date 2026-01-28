@@ -13,6 +13,9 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.core.window import Window
 
+import socket
+
+
 import shutil
 from augmentor import augmentor
 import cv2
@@ -395,6 +398,107 @@ class augmentorModeSelectorApp(App):
             if checkbox.id == 'line' and parameters.augmentor_mode != None:
                 self.sign_chk.active = False
             parameters.augmentor_mode = checkbox.id
+    def clicked(self,_):
+        if parameters.augmentor_mode != None:
+            self.stop()
+            augmentorSpeedApp().run()
+
+class augmentorSpeedApp(App):
+    def on_start(self):
+        Window.size = (1100, 600)
+        Window.minimum_width = 800
+        Window.minimum_height = 600
+    def build(self):
+        checkbox_layout = StackLayout(orientation ='lr-tb')
+            
+        super_slow_lbl = Label(text='super slow',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos_hint = (None,None))
+        self.super_slow_chk = CheckBox(active=False,size_hint = (None,None),pos_hint = (None,None))
+        self.super_slow_chk.id = 'super slow'
+        self.super_slow_chk.bind(active = self.checkbox_is_active)
+        checkbox_layout.add_widget(super_slow_lbl)
+        checkbox_layout.add_widget(self.super_slow_chk)
+
+        slow_lbl = Label(text='slow',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos_hint = (None,None))
+        self.slow_chk = CheckBox(active=False,size_hint = (None,None),pos_hint = (None,None))
+        self.slow_chk.id = 'slow'
+        self.slow_chk.bind(active = self.checkbox_is_active)
+        checkbox_layout.add_widget(slow_lbl)
+        checkbox_layout.add_widget(self.slow_chk)
+
+        fast_lbl = Label(text='fast',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos_hint = (None,None))
+        self.fast_chk = CheckBox(active=False,size_hint = (None,None),pos_hint = (None,None))
+        self.fast_chk.id = 'fast'
+        self.fast_chk.bind(active = self.checkbox_is_active)
+        checkbox_layout.add_widget(fast_lbl)
+        checkbox_layout.add_widget(self.fast_chk)
+
+        super_fast_lbl = Label(text='super fast',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos_hint = (None,None))
+        self.super_fast_chk = CheckBox(active=False,size_hint = (None,None),pos_hint = (None,None))
+        self.super_fast_chk.id = 'super fast'
+        self.super_fast_chk.bind(active = self.checkbox_is_active)
+        checkbox_layout.add_widget(super_fast_lbl)
+        checkbox_layout.add_widget(self.super_fast_chk)
+
+        device_name = socket.gethostname()
+
+        confirm_layout = AnchorLayout(anchor_x='center', anchor_y='bottom')
+        confirm_btn = Button(text='start',size_hint = (None,None),size = ("75dp","40dp"),on_press = self.clicked,
+                             background_normal='',background_color=(0,0.8,0.3,1))
+        confirm_layout.add_widget(confirm_btn)
+
+        image_layout = AnchorLayout(anchor_x='right', anchor_y='bottom')
+        auriga_image = Image(source = 'Auriga.png',size_hint = (None,None))
+        image_layout.add_widget(auriga_image)
+        screen_layout = FloatLayout()
+        self.joke_lbl = Label(pos=(200,100),size_hint = (None,None))
+        self.joke_lbl.text = ''
+        device_name_layout = FloatLayout()
+        if self.super_slow_chk.active == True:
+            self.joke_lbl.text=f'lets golrizan for {device_name} to buy a new device'
+        if self.super_fast_chk.active == True:
+            self.joke_lbl.text=f"'{device_name}' please give me some mone \n even a single dollar matters 6280231539841105"
+        device_name_layout.add_widget(self.joke_lbl)
+
+        screen_layout.add_widget(device_name_layout)
+        screen_layout.add_widget(confirm_layout)
+        screen_layout.add_widget(checkbox_layout)
+        screen_layout.add_widget(image_layout)
+        return screen_layout
+    
+    def checkbox_is_active(self,checkbox,value):
+        if value :
+            if checkbox.id == 'super slow' :
+                parameters.threads_num = 1
+                self.super_fast_chk.active = False
+                self.fast_chk.active = False
+                self.slow_chk.active = False
+                device_name = socket.gethostname()
+                self.joke_lbl.text=f'lets golrizan for {device_name} to buy a new device'
+                self.joke_lbl.texture_update()
+
+            if checkbox.id == 'slow' :
+                parameters.threads_num = 3
+                self.super_fast_chk.active = False
+                self.fast_chk.active = False
+                self.super_slow_chk.active = False
+                self.joke_lbl.text=''
+                self.joke_lbl.texture_update()
+            if checkbox.id == 'super fast' :
+                parameters.threads_num = 10
+                self.slow_chk.active = False
+                self.fast_chk.active = False
+                self.super_slow_chk.active = False
+                device_name = socket.gethostname()
+                self.joke_lbl.text=f"'{device_name}' please give me some money \n even a single dollar matters 6280231539841105"
+                self.joke_lbl.texture_update()
+            if checkbox.id == 'fast' :
+                parameters.threads_num = 6
+                self.slow_chk.active = False
+                self.super_fast_chk.active = False
+                self.super_slow_chk.active = False
+                self.joke_lbl.text=''
+                self.joke_lbl.texture_update()
+                
     def clicked(self,_):
         if parameters.augmentor_mode != None:
             self.stop()
