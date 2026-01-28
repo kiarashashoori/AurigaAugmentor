@@ -1,6 +1,6 @@
 #tb_values = [input_image,input_label,output_image,output_label]
-path_values = ['/home/tensorcore/Desktop/kiarash new','/home/tensorcore/Desktop/kiarash new label','/home/tensorcore/Desktop/backup','/home/tensorcore/Desktop/backup']
+path_values = ['/home/tensorcore/Desktop/backup','/home/tensorcore/Desktop/backup','/home/tensorcore/Desktop/backup','/home/tensorcore/Desktop/backup']
 active_checkboxs = []
-augmentor_mode = None 
+augmentor_mode = 'sign' 
 augment_process = []
 data_cleaner_paths = ['','']

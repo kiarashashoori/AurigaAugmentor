@@ -428,32 +428,18 @@ class augmentor():
                       |                      |
                     x2y2-------------------x3y3 
                     '''
-                    initial_x_coordinates = (center_x-width/2,center_x+width/2,center_x-width/2,center_x-width/2)
-                    initial_y_coordinates = (1-center_y-height/2,1-center_y-height/2,1-center_y+height/2,1-center_y-height/2)
-                    initial_tetas = (np.arctan2(initial_y_coordinates[0],initial_x_coordinates[0]),
-                                     np.arctan2(initial_y_coordinates[1],initial_x_coordinates[1]),
-                                     np.arctan2(initial_y_coordinates[2],initial_x_coordinates[2]),
-                                     np.arctan2(initial_y_coordinates[3],initial_x_coordinates[3]))
-                    
-                    ###   my origin is bl
-                    distances_from_origin = (np.sqrt(initial_x_coordinates[0]**2+initial_y_coordinates[0]**2),
-                                             np.sqrt(initial_x_coordinates[1]**2+initial_y_coordinates[1]**2),
-                                             np.sqrt(initial_x_coordinates[2]**2+initial_y_coordinates[2]**2),
-                                             np.sqrt(initial_x_coordinates[3]**2+initial_y_coordinates[3]**2))
-                    
-                    secondary_tetas = (initial_tetas[0]+np.deg2rad(angle),initial_tetas[1]+np.deg2rad(angle),
-                                       initial_tetas[2]+np.deg2rad(angle),initial_tetas[3]+np.deg2rad(angle))
+                    initial_x_coordinates = np.array([center_x-width/2,center_x+width/2,center_x-width/2,center_x+width/2])
+                    initial_y_coordinates = np.array([center_y-height/2,center_y-height/2,center_y+height/2,center_y+height/2])
 
-                    secondary_x_coordinates = (distances_from_origin[0]*np.cos(secondary_tetas[0]),
-                                               distances_from_origin[1]*np.cos(secondary_tetas[1]),
-                                               distances_from_origin[2]*np.cos(secondary_tetas[2]),
-                                               distances_from_origin[3]*np.cos(secondary_tetas[3]))
-                    
-                    secondary_y_coordinates = (1-(distances_from_origin[0]*np.sin(secondary_tetas[0])),
-                                               1-(distances_from_origin[1]*np.sin(secondary_tetas[1])),
-                                               1-(distances_from_origin[2]*np.sin(secondary_tetas[2])),
-                                               1-(distances_from_origin[3]*np.sin(secondary_tetas[3])))
-                    
+                    initial_x_coordinates = initial_x_coordinates - 0.5
+                    initial_y_coordinates = initial_y_coordinates - 0.5
+
+                    secondary_x_coordinates = (np.cos(np.radians(angle))*initial_x_coordinates)+(np.sin(np.radians(angle))*initial_y_coordinates)
+                    secondary_y_coordinates = (np.cos(np.radians(angle))*initial_y_coordinates)-(np.sin(np.radians(angle))*initial_x_coordinates)
+
+                    secondary_x_coordinates = secondary_x_coordinates + 0.5
+                    secondary_y_coordinates = secondary_y_coordinates + 0.5
+
                     minimum_x = min(secondary_x_coordinates)
                     minimum_y = min(secondary_y_coordinates)
                     maximum_x = max(secondary_x_coordinates)
@@ -462,10 +448,12 @@ class augmentor():
                     # if (minimum_x < 0 or minimum_y < 0 or maximum_x > 1 or maximum_y > 1) == False:
 
                     new_width,new_height = maximum_x - minimum_x,maximum_y-minimum_y
-                    print(minimum_x)
+                    new_width += 0.01
+                    new_height += 0.01
                     new_center_x,new_center_y = minimum_x+new_width/2,minimum_y+new_height/2
+                    
 
-                    augmented_label += line.split()[0]
+                    augmented_label += line_content[0]
                     augmented_label += ' '
                     augmented_label += str(new_center_x)
                     augmented_label += ' '

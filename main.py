@@ -565,7 +565,7 @@ class augmentViewerApp(App):
         apply_btn = Button(text='apply',size_hint = (None,None),size = ("75dp","40dp"),
                              background_normal='',background_color=(0,0.8,0.3,1),pos=(800,100),on_press = self.apply_clicked)
         
-        if parameters.active_checkboxs[0] in ['flipped'] == False:
+        if parameters.active_checkboxs[0] != 'flipped':
             threshold_layout.add_widget(self.threshold)
         threshold_layout.add_widget(apply_btn)
         threshold_layout.add_widget(self.times)
