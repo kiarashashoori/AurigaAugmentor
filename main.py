@@ -12,6 +12,7 @@ from kivy.uix.stacklayout import StackLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.core.window import Window
+from kivy.uix.slider import Slider
 
 import socket
 
@@ -484,7 +485,7 @@ class augmentorSpeedApp(App):
                 self.joke_lbl.text=''
                 self.joke_lbl.texture_update()
             if checkbox.id == 'super fast' :
-                parameters.threads_num = 10
+                parameters.threads_num = 9
                 self.slow_chk.active = False
                 self.fast_chk.active = False
                 self.super_slow_chk.active = False
@@ -604,7 +605,7 @@ class augmentViewerApp(App):
     def build(self):
         if len(parameters.active_checkboxs) <= 0:
             pass
-        
+        print((parameters.active_checkboxs[0] in ['rotate','vertical motion blur','horizontal motion blur','blur','flipped']))
         
         augmentViewerApp.create_sample(self)
         auriga_image_layout = AnchorLayout(anchor_x='right', anchor_y='bottom')
@@ -638,43 +639,61 @@ class augmentViewerApp(App):
 
         threshold_layout = FloatLayout()
         
-        if (parameters.active_checkboxs[0] in ['increase brightness', 'decrease brightness']):
-            self.threshold = TextInput(text = str(self.increase_brightness_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
-        if (parameters.active_checkboxs[0] in ['increase contrast', 'decrease contrast']):
-            self.threshold = TextInput(text = str(self.increase_contrast_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
-        if (parameters.active_checkboxs[0] in ['increase saturation', 'decrease saturation']):
-            self.threshold = TextInput(text = str(self.increase_saturation_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+        if (parameters.active_checkboxs[0] == 'increase brightness'):
+            self.threshold = Slider(min=0, max=200, value=self.increase_brightness_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
+        if (parameters.active_checkboxs[0] == 'decrease brightness'):
+            self.threshold = Slider(min=0, max=200, value=self.decrease_brightness_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))    
+
+        if (parameters.active_checkboxs[0] == 'increase contrast'):
+            self.threshold = Slider(min=0, max=180, value=self.increase_contrast_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
+        if (parameters.active_checkboxs[0] == 'decrease contrast'):
+            self.threshold = Slider(min=0, max=180, value=self.decrease_contrast_threshold,
+                                size_hint=(None, None), width=600, height=40,pos=(200,100))
+        
+        if (parameters.active_checkboxs[0] == 'increase saturation'):
+            self.threshold = Slider(min=0, max=180, value=self.increase_saturation_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
+        if (parameters.active_checkboxs[0] == 'decrease saturation'):
+            self.threshold = Slider(min=0, max=200, value=self.decrease_saturation_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
+                
         if (parameters.active_checkboxs[0] == 'salt&pepper'):
-            self.threshold = TextInput(text = str(self.salt_pepper_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+            self.threshold = Slider(min=0, max=200, value=self.salt_pepper_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
+            
         if (parameters.active_checkboxs[0] == 'blur'):
-            self.threshold = TextInput(text = str(self.blur_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+            self.threshold = Slider(min=0, max=33, value=self.blur_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
         if (parameters.active_checkboxs[0] == 'horizontal motion blur'):
-            self.threshold = TextInput(text = str(self.horizontal_blur_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+            self.threshold = Slider(min=0, max=110, value=self.horizontal_blur_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
         if (parameters.active_checkboxs[0] == 'vertical motion blur'):
-            self.threshold = TextInput(text = str(self.vertical_blur_threshold),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+            self.threshold = Slider(min=0, max=110, value=self.vertical_blur_threshold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
         if (parameters.active_checkboxs[0] == 'rotate'):
-            self.threshold = TextInput(text = str(self.rotate_angle),size_hint = (None,None),size=("600dp","30dp"),pos=(200,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+            self.threshold = Slider(min=-89, max=89, value=self.rotate_angle,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
             
         lbl = Label(text=parameters.active_checkboxs[0],pos=(20,100),size_hint = (None,None))
-        self.times = TextInput(text = '1',size_hint = (None,None),size=("50dp","30dp"),pos=(100,100),
-                                    multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
+        if (parameters.active_checkboxs[0] in ['rotate','vertical motion blur','horizontal motion blur','blur','flipped']) == False:
+            self.times = TextInput(text = '1',size_hint = (None,None),size=("50dp","30dp"),pos=(100,100),
+                                        multiline=False,foreground_color=(1,1,1,1),background_normal='',background_color=(0.2,0.2,0.2,1))
         apply_btn = Button(text='apply',size_hint = (None,None),size = ("75dp","40dp"),
                              background_normal='',background_color=(0,0.8,0.3,1),pos=(800,100),on_press = self.apply_clicked)
         
+        
         if parameters.active_checkboxs[0] != 'flipped':
             threshold_layout.add_widget(self.threshold)
+            
         threshold_layout.add_widget(apply_btn)
-        threshold_layout.add_widget(self.times)
+        if (parameters.active_checkboxs[0] in ['rotate','vertical motion blur','horizontal motion blur','blur','flipped']) == False:
+            threshold_layout.add_widget(self.times)
         threshold_layout.add_widget(lbl)
 
+                
         
 
         self.screen_layout = FloatLayout()
@@ -705,33 +724,42 @@ class augmentViewerApp(App):
 
     def apply_clicked(self,_):
         if (parameters.active_checkboxs[0] == 'increase brightness'):
-            self.increase_brightness_threshold = int(self.threshold.text)
+            self.increase_brightness_threshold = int(self.threshold.value)
         if (parameters.active_checkboxs[0] == 'decrease brightness'):
-            self.decrease_brightness_threshold = int(self.threshold.text)
+            self.decrease_brightness_threshold = int(self.threshold.value)
 
         if (parameters.active_checkboxs[0] == 'increase contrast'):
-            self.increase_contrast_threshold = int(self.threshold.text)
+            self.increase_contrast_threshold = int(self.threshold.value)
         if (parameters.active_checkboxs[0] == 'decrease contrast'):
-            self.decrease_contrast_threshold = int(self.threshold.text)
+            self.decrease_contrast_threshold = int(self.threshold.value)
         
         if (parameters.active_checkboxs[0] == 'increase saturation'):
-            self.increase_saturation_threshold = int(self.threshold.text)
+            self.increase_saturation_threshold = int(self.threshold.value)
         if (parameters.active_checkboxs[0] == 'decrease saturation'):
-            self.decrease_saturation_threshold = int(self.threshold.text)
+            self.decrease_saturation_threshold = int(self.threshold.value)
 
         if (parameters.active_checkboxs[0] == 'salt&pepper'):
-            self.salt_pepper_threshold = int(self.threshold.text)
+            self.salt_pepper_threshold = int(self.threshold.value)
 
         if (parameters.active_checkboxs[0] == 'blur'):
-            self.blur_threshold = int(self.threshold.text)
+            val = int(self.threshold.value)
+            if (val % 2 == 0):
+                val -= 1
+            self.blur_threshold = val
 
         if (parameters.active_checkboxs[0] == 'horizontal motion blur'):
-            self.horizontal_blur_threshold = int(self.threshold.text)
+            val = int(self.threshold.value)
+            if (val % 2 == 0):
+                val -= 1
+            self.horizontal_blur_threshold = val
         if (parameters.active_checkboxs[0] == 'vertical motion blur'):
-            self.vertical_blur_threshold = int(self.threshold.text)
+            val = int(self.threshold.value)
+            if (val % 2 == 0):
+                val -= 1
+            self.vertical_blur_threshold = val
 
         if (parameters.active_checkboxs[0] == 'rotate'):
-            self.rotate_angle = int(self.threshold.text)
+            self.rotate_angle = int(self.threshold.value)
 
         augmentViewerApp.create_sample(self)
         self.image.reload()
@@ -756,16 +784,16 @@ class augmentViewerApp(App):
             parameters.augment_process.append(('salt&pepper',int(self.times.text),self.salt_pepper_threshold))
         
         if (parameters.active_checkboxs[0] == 'blur'):
-            parameters.augment_process.append(('blur',int(self.times.text),self.blur_threshold))
+            parameters.augment_process.append(('blur',None,self.blur_threshold))
 
         if (parameters.active_checkboxs[0] == 'horizontal motion blur'):
-            parameters.augment_process.append(('horizontal motion blur',int(self.times.text),self.horizontal_blur_threshold))
+            parameters.augment_process.append(('horizontal motion blur',None,self.horizontal_blur_threshold))
         if (parameters.active_checkboxs[0] == 'vertical motion blur'):
-            parameters.augment_process.append(('vertical motion blur',int(self.times.text),self.vertical_blur_threshold))
+            parameters.augment_process.append(('vertical motion blur',None,self.vertical_blur_threshold))
 
         if (parameters.active_checkboxs[0] == 'flipped'):
             parameters.augment_process.append(('flipped',None,None))
-
+        
         if (parameters.active_checkboxs[0] == 'rotate'):
             parameters.augment_process.append(('rotate',None,self.rotate_angle))
 

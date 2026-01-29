@@ -1,7 +1,7 @@
 #tb_values = [input_image,input_label,output_image,output_label]
-path_values = ['/home/tensorcore/Desktop/backup','/home/tensorcore/Desktop/backup','/home/tensorcore/Desktop/backup','/home/tensorcore/Desktop/backup']
+path_values = ['','','','']
 active_checkboxs = []
-augmentor_mode = 'sign' 
+augmentor_mode = None 
 augment_process = []
 data_cleaner_paths = ['','']
 
