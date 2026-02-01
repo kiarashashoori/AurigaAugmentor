@@ -13,7 +13,10 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.core.window import Window
 from kivy.uix.slider import Slider
-
+from kivy.uix.progressbar import ProgressBar
+import time
+from kivy.clock import Clock
+from kivy.clock import mainthread
 import socket
 
 
@@ -107,7 +110,7 @@ class dataCleanerPathBrowserApp(App):
     def btn_clicked(self,instance):
         flag = True
         if instance.text == 'confirm':
-            for path in parameters.path_values:
+            for path in parameters.data_cleaner_paths:
                 if path == '':
                     flag = False
             
@@ -784,18 +787,18 @@ class augmentViewerApp(App):
             parameters.augment_process.append(('salt&pepper',int(self.times.text),self.salt_pepper_threshold))
         
         if (parameters.active_checkboxs[0] == 'blur'):
-            parameters.augment_process.append(('blur',None,self.blur_threshold))
+            parameters.augment_process.append(('blur',1,self.blur_threshold))
 
         if (parameters.active_checkboxs[0] == 'horizontal motion blur'):
-            parameters.augment_process.append(('horizontal motion blur',None,self.horizontal_blur_threshold))
+            parameters.augment_process.append(('horizontal motion blur',1,self.horizontal_blur_threshold))
         if (parameters.active_checkboxs[0] == 'vertical motion blur'):
-            parameters.augment_process.append(('vertical motion blur',None,self.vertical_blur_threshold))
+            parameters.augment_process.append(('vertical motion blur',1,self.vertical_blur_threshold))
 
         if (parameters.active_checkboxs[0] == 'flipped'):
-            parameters.augment_process.append(('flipped',None,None))
+            parameters.augment_process.append(('flipped',1,None))
         
         if (parameters.active_checkboxs[0] == 'rotate'):
-            parameters.augment_process.append(('rotate',None,self.rotate_angle))
+            parameters.augment_process.append(('rotate',1,self.rotate_angle))
 
         if (len(parameters.active_checkboxs) > 1):
             parameters.active_checkboxs.pop(0)
@@ -803,7 +806,8 @@ class augmentViewerApp(App):
             augmentViewerApp().stop()
             augmentViewerApp().run()
         else :
-            augmentViewerApp().stop()
+            augmentProcessApp.calculateAugmentedImagesQuantity()
+            self.stop()
             augmentProcessApp().run()
 
         
@@ -844,23 +848,43 @@ class augmentViewerApp(App):
             sample_img = augmentor.rotateAugmentor(img,None,self.rotate_angle,'sample')
             
         cv2.imwrite("cache/output_img.jpg",sample_img)
-            
+              
 class augmentProcessApp(App):
+   
     def on_start(self):
         Window.size = (1200, 800)
         Window.minimum_width = 1200
         Window.minimum_height = 800
+        
     def build(self):
+        auriga_image_layout = AnchorLayout(anchor_x='right', anchor_y='bottom')
+        auriga_image = Image(source = 'Auriga.png',size_hint = (None,None))
+        auriga_image_layout.add_widget(auriga_image)
+        layout = FloatLayout()
+        self.pb = ProgressBar(max=parameters.quantity, value=parameters.counter, size_hint=(None, None), width=800, height=30,pos=(200, 400))
+        self.lbl = Label(text = f"{parameters.counter}/{parameters.quantity}",size_hint = (None,None),size = ("150dp", "100dp"),
+                          halign='left',valign='middle',pos=(550, 350),color=(1,1,1,1))
+        layout.add_widget(self.pb)
+        layout.add_widget(self.lbl)
+        layout.add_widget(auriga_image_layout)
         self.augmentProcessHandler()
+
+        # UI update loop (main thread safe)
+        Clock.schedule_interval(self.update_progress, 0.1)
+        return layout
+
+    @mainthread
     def augmentProcessHandler(self):
         threads = []
-        if len(parameters.augment_process) > 6:
-            for i in range(6):
+       
+        if len(parameters.augment_process) >= parameters.threads_num:
+            for i in range(parameters.threads_num):
                 aug = augmentor(parameters.path_values[0],parameters.path_values[1],parameters.path_values[2],
                                     parameters.path_values[3],parameters.augment_process[i][1],parameters.augment_process[i][0])
                 t = threading.Thread(target=augmentor.action,args=(aug,parameters.augment_process[i][2]))
                 threads.append(t)
-            for _ in range(6):
+                parameters.finish.append(parameters.augment_process[i][0])
+            for _ in range(parameters.threads_num):
                 parameters.augment_process.pop(0)
         else :
             for i in range(len(parameters.augment_process)):
@@ -868,15 +892,54 @@ class augmentProcessApp(App):
                                     parameters.path_values[3],parameters.augment_process[i][1],parameters.augment_process[i][0])
                 t = threading.Thread(target=augmentor.action,args=(aug,parameters.augment_process[i][2]))
                 threads.append(t)
+                parameters.finish.append(parameters.augment_process[i][0])
             for _ in range(len(parameters.augment_process)):
                 parameters.augment_process.pop(0)
         for thread in threads:
             thread.start()
-        for thread in threads:
-            thread.join()
-        if len(parameters.augment_process) != 0:
-            augmentProcessApp.augmentProcessHandler(self)
-               
+    
+    @staticmethod
+    def calculateAugmentedImagesQuantity():
+        input_images_num = len(os.listdir(parameters.path_values[1]))
+        times = 0
+        for augment in parameters.augment_process:
+            times += augment[1]
+        parameters.quantity = times * input_images_num
+
+    def finish(self):
+        self.stop()
+        finitoApp().run()
+
+    def update_progress(self, dt):
+        if len(parameters.augment_process) != 0 and len(parameters.finish) == 0:
+            self.augmentProcessHandler()
+
+        self.pb.value = parameters.counter
+        self.lbl.text = f"{parameters.counter}/{parameters.quantity}"
+
+        if parameters.counter >= parameters.quantity:
+            Clock.unschedule(self.update_progress)
+            self.finish()
+
+        
+        
+    
+class finitoApp(App):
+    def on_start(self):
+        Window.size = (1200, 800)
+        Window.minimum_width = 1200
+        Window.minimum_height = 800
+        
+    def build(self):
+        auriga_image_layout = AnchorLayout(anchor_x='center', anchor_y='center')
+        auriga_image = Image(source = 'Auriga.png',size_hint = (None,None),size=(400,400))
+        auriga_image_layout.add_widget(auriga_image)
+
+
+        layout = FloatLayout()
+        layout.add_widget(auriga_image_layout)
+        return layout
+
 if __name__ == '__main__':
     root = appSelectorApp()
     root.run()

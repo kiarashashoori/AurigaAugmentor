@@ -5,6 +5,9 @@ import cv2
 import numpy as np
 import random
 import parameters
+import threading
+
+lock = threading.Lock()
 
 class augmentor():
     def __init__(self,input_img_path,input_label_path,output_img_path,output_label_path,times,augment_type):
@@ -37,6 +40,9 @@ class augmentor():
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
                         augmented_image = augmentor.brightnessIncreasedAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('increase brightness')
         
         if self.augment_type == 'decrease brightness':
             ###copy and paste the labels###
@@ -57,7 +63,9 @@ class augmentor():
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
                         augmented_image = augmentor.brightnessDecreasedAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)
-
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('decrease brightness')
 ###################################################################################################
 ###            CONTRAST AUGMENT               ###
 
@@ -80,6 +88,10 @@ class augmentor():
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
                         augmented_image = augmentor.contrastDecreasedAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('decrease contrast')
+
         if self.augment_type == 'increase contrast':
             ###copy and paste the labels###
             label_filename_list = os.listdir(self.input_label_path)
@@ -99,6 +111,10 @@ class augmentor():
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
                         augmented_image = augmentor.contrastIncreasedAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('increase contrast')
+
 
 ###################################################################################################
 ###            SATURATION AUGMENT               ###
@@ -122,6 +138,10 @@ class augmentor():
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
                         augmented_image = augmentor.saturationDecreasedAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('decrease saturation')
+
         if self.augment_type == 'increase saturation':
             ###copy and paste the labels###
             label_filename_list = os.listdir(self.input_label_path)
@@ -141,6 +161,9 @@ class augmentor():
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
                         augmented_image = augmentor.saturationIncreasedAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)  
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('increase saturation')
 
 ###################################################################################################
 ###            SALT & PEPPER AUGMENT               ###        
@@ -164,6 +187,10 @@ class augmentor():
                         img_output_path = os.path.join(self.output_img_path,img_output_filename)
                         augmented_image = augmentor.saltPepperAugmentor(img,threshold,'augment')
                         cv2.imwrite(img_output_path,augmented_image)   
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('salt&pepper')
+
 
 ###################################################################################################
 ###            BlUR AUGMENT               ### 
@@ -185,6 +212,9 @@ class augmentor():
                     img_output_path = os.path.join(self.output_img_path,img_output_filename)
                     augmented_image = augmentor.blurAugmentor(img,threshold,'augment')
                     cv2.imwrite(img_output_path,augmented_image)    
+                    with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('blur')
                     
 ###################################################################################################
 ###            MOTION BLUR AUGMENT               ###   
@@ -206,7 +236,10 @@ class augmentor():
                     img_output_path = os.path.join(self.output_img_path,img_output_filename)
                     augmented_image = augmentor.shakeVerticalBlurAugmentor(img,threshold,'augment')
                     cv2.imwrite(img_output_path,augmented_image)
-        
+                    with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('vertical motion blur')
+
         if self.augment_type == 'horizontal motion blur':
             ###copy and paste the labels###
             label_filename_list = os.listdir(self.input_label_path)
@@ -224,6 +257,10 @@ class augmentor():
                     img_output_path = os.path.join(self.output_img_path,img_output_filename)
                     augmented_image = augmentor.shakeHorizontalBlurAugmentor(img,threshold,'augment')
                     cv2.imwrite(img_output_path,augmented_image)
+                    with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('horizontal motion blur')
+            
 
 ###################################################################################################
 ###            FLIPPED AUGMENT               ###   
@@ -245,6 +282,9 @@ class augmentor():
                     with open(label_output_path,'w') as f:
                         f.writelines(augmented_label_list)
                     f.close()
+                    with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('flipped')
 
 ###################################################################################################
 ###            ROTATE AUGMENT               ###   
@@ -266,6 +306,9 @@ class augmentor():
                     with open(label_output_path,'w') as f:
                         f.writelines(augmented_label_list)
                     f.close()
+                    with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('rotate')
 
 
 
