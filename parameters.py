@@ -6,7 +6,7 @@ augment_process = []
 data_cleaner_paths = ['','']
 
 rotation_scale = 0.1
-threads_num = 6
+threads_num = -1
 
 quantity = 0
 counter = 0
