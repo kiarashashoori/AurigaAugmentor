@@ -343,6 +343,31 @@ class augmentor():
             logging.info('[rotate] finised!')
 
 
+###################################################################################################
+###            SUNLIGHT AUGMENT               ###   
+
+        if self.augment_type == 'sunlight':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    label_output_filename = "SUN_"+ filename
+                    label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                    shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    for i in range(self.times):
+                        img_output_filename = "SUN_" + f"{i}_" + filename
+                        img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                        augmented_image = augmentor.sunlightAugmentor(img,threshold[2],threshold[0],threshold[1])
+                        cv2.imwrite(img_output_path,augmented_image)   
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('sunlight')
+            logging.info('[sunlight] finised!')
 
 
     @staticmethod
@@ -622,6 +647,61 @@ class augmentor():
 
 
             return augmented_image,augmented_label_list
+    @staticmethod
+    def sunlightAugmentor(image,num_lights,blur,intensity):
+        H, W = image.shape[:2]
+        output = image.copy().astype(np.float32)
+
+        for _ in range(num_lights):
+
+            mask = np.zeros((H, W), dtype=np.float32)
+
+            # triangle beam from top
+            pt1 = (np.random.randint((W//10)*2, (W//10)*8), 0)
+            pt2 = (pt1[0] - np.random.randint(80, 200), H)
+            pt3 = (pt1[0] + np.random.randint(80, 200), H)
+
+            pts = np.array([pt1, pt2, pt3], dtype=np.int32)
+            cv2.fillPoly(mask, [pts], 1.0)
+
+            # gradient fade (top bright → bottom fade)
+            gradient = np.linspace(1, 0, H) ** parameters.fade_power
+            gradient = np.tile(gradient, (W, 1)).T
+            mask *= gradient
+            if blur > 0:
+                mask = cv2.GaussianBlur(mask, (blur, blur), 0)
+
+            # brighten instead of darken
+            output += (mask * intensity * 255)[:, :, None]
+        return np.clip(output, 0, 255).astype(np.uint8)
+
+    @staticmethod
+    def shadowAugmentor(image,num_shadows,blur,strength,mode):
+        H, W = image.shape[:2]
+        output = image.copy().astype(np.float32)
+
+        # create mask
+        mask = np.zeros((H, W), dtype=np.float32)
+        for _ in num_shadows:
+            pt1 = (np.random.randint(int((image.shape[1]/10)*2),int((image.shape[1]/10)*8)),
+                   np.random.randint(image.shape[0]//2,image.shape[0]))
+            pt2 = (np.random.randint(pt1[0]-200,pt1[0]-50),
+                   np.random.randint(pt1[1]-200,pt1[1]+200))
+            pt3 = (np.random.randint(pt1[0]+50,pt1[0]+200),
+                   np.random.randint(pt1[1]-200,pt1[1]+200))
+            pts = np.array([pt1,pt2,pt3], dtype=np.int32)
+            cv2.fillPoly(mask, pts, 1.0)
+
+            # optional blur for soft shadow edges
+            if blur > 0:
+                mask = cv2.GaussianBlur(mask, (blur, blur), 0)
+
+            # apply shadow
+            shadow_factor = 1.0 - strength
+            for c in range(3):
+                output[:, :, c] *= (1 - mask + mask * shadow_factor)
+
+        return np.clip(output, 0, 255).astype(np.uint8)
 
 
 

@@ -1,15 +1,15 @@
-import os
-import logging
+# import os
+# import logging
 
-logging.basicConfig(format="{asctime} - {levelname} - {message}",
-     style="{",
-     datefmt="%Y-%m-%d %H:%M",
-     level=logging.INFO
- )
+# logging.basicConfig(format="{asctime} - {levelname} - {message}",
+#      style="{",
+#      datefmt="%Y-%m-%d %H:%M",
+#      level=logging.INFO
+#  )
 
-logging.getLogger("kivy").disabled = True
-logging.getLogger("kivy.core").disabled = True
-logging.getLogger("kivy.base").disabled = True
+# logging.getLogger("kivy").disabled = True
+# logging.getLogger("kivy.core").disabled = True
+# logging.getLogger("kivy.base").disabled = True
 from kivy.app import App
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.label import Label
@@ -39,12 +39,16 @@ import threading
 
 import parameters
 
+import os
+import logging
 
-logging.basicConfig(format="{asctime} - {levelname} - {message}",
-     style="{",
-     datefmt="%Y-%m-%d %H:%M",
-     level=logging.INFO
- )
+
+
+# logging.basicConfig(format="{asctime} - {levelname} - {message}",
+#      style="{",
+#      datefmt="%Y-%m-%d %H:%M",
+#      level=logging.INFO
+#  )
 
     
 tb_values = parameters.path_values
@@ -624,6 +628,10 @@ class augmentViewerApp(App):
 
         self.rotate_angle = 10
 
+        self.sunlight_nums = 2
+        self.sunlight_blur = 11
+        self.sunlight_intensity = 80
+
         self.b = 50
 
         self.i = 0
@@ -640,8 +648,7 @@ class augmentViewerApp(App):
     def build(self):
         if len(parameters.active_checkboxs) <= 0:
             pass
-        print((parameters.active_checkboxs[0] in ['rotate','vertical motion blur','horizontal motion blur','blur','flipped']))
-        
+
         augmentViewerApp.create_sample(self)
         auriga_image_layout = AnchorLayout(anchor_x='right', anchor_y='bottom')
         auriga_image = Image(source = 'Auriga.png',size_hint = (None,None))
@@ -711,6 +718,17 @@ class augmentViewerApp(App):
         if (parameters.active_checkboxs[0] == 'rotate'):
             self.threshold = Slider(min=-89, max=89, value=self.rotate_angle,
                                     size_hint=(None, None), width=600, height=40,pos=(200,100))
+        
+        if (parameters.active_checkboxs[0] == 'sunlight'):
+            numlbl = Label(text = 'num',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos=  (110,120))
+            self.threshold_sunlight_num = Slider(min=1, max=7, value=self.sunlight_nums,
+                                            size_hint=(None, None), width=600, height=40,pos=(200,150))
+            intensitylbl = Label(text = 'intensity',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos=  (110,70))
+            self.threshold_sunlight_intensity = Slider(min=0, max=100, value=self.sunlight_intensity,
+                                                size_hint=(None, None), width=600, height=40,pos=(200,100))
+            blurlbl = Label(text = 'blur',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos=  (110,20))
+            self.threshold_sunlight_blur = Slider(min=3, max=91, value=self.sunlight_blur,
+                                                size_hint=(None, None), width=600, height=40,pos=(200,50))
             
         lbl = Label(text=parameters.active_checkboxs[0],pos=(20,100),size_hint = (None,None))
         if (parameters.active_checkboxs[0] in ['rotate','vertical motion blur','horizontal motion blur','blur','flipped']) == False:
@@ -720,8 +738,16 @@ class augmentViewerApp(App):
                              background_normal='',background_color=(0,0.8,0.3,1),pos=(800,100),on_press = self.apply_clicked)
         
         
-        if parameters.active_checkboxs[0] != 'flipped':
+        if parameters.active_checkboxs[0] != 'flipped' and parameters.active_checkboxs[0] != 'sunlight':
             threshold_layout.add_widget(self.threshold)
+        
+        if parameters.active_checkboxs[0] == 'sunlight':
+            threshold_layout.add_widget(blurlbl)
+            threshold_layout.add_widget(intensitylbl)
+            threshold_layout.add_widget(numlbl)
+            threshold_layout.add_widget(self.threshold_sunlight_blur)
+            threshold_layout.add_widget(self.threshold_sunlight_intensity)
+            threshold_layout.add_widget(self.threshold_sunlight_num)
             
         threshold_layout.add_widget(apply_btn)
         if (parameters.active_checkboxs[0] in ['rotate','vertical motion blur','horizontal motion blur','blur','flipped']) == False:
@@ -796,6 +822,14 @@ class augmentViewerApp(App):
         if (parameters.active_checkboxs[0] == 'rotate'):
             self.rotate_angle = int(self.threshold.value)
         
+        if (parameters.active_checkboxs[0] == 'sunlight'):
+            val = int(self.threshold_sunlight_blur.value)
+            if (val % 2 == 0):
+                val -= 1
+            self.sunlight_blur = val
+            self.sunlight_intensity = int(self.threshold_sunlight_intensity.value)
+            self.sunlight_nums = int(self.threshold_sunlight_num.value)
+        
         logging.info(f"AUGMENTOR:Your setting for '{parameters.active_checkboxs[0]}' changed!")
         
 
@@ -834,6 +868,10 @@ class augmentViewerApp(App):
         
         if (parameters.active_checkboxs[0] == 'rotate'):
             parameters.augment_process.append(('rotate',1,self.rotate_angle))
+        
+        if (parameters.active_checkboxs[0] == 'sunlight'):
+            parameters.augment_process.append(('sunlight',int(self.times.text),
+                                               (self.sunlight_blur,self.sunlight_intensity/100,self.sunlight_nums)))
 
         logging.info(f"AUGMENTOR:Your setting for '{parameters.active_checkboxs[0]}' saved!")
 
@@ -885,6 +923,11 @@ class augmentViewerApp(App):
             sample_img = augmentor.flippedAugmentor(img,None,'sample')
         if (parameters.active_checkboxs[0] == 'rotate'):
             sample_img = augmentor.rotateAugmentor(img,None,self.rotate_angle,'sample')
+        
+        if (parameters.active_checkboxs[0] == 'sunlight'):
+            print('bbb')
+            sample_img = augmentor.sunlightAugmentor(img,self.sunlight_nums,self.sunlight_blur,self.sunlight_intensity/100)
+            
         
         logging.info(f"AUGMENTOR:Showing sample image for '{parameters.active_checkboxs[0]}'")
         cv2.imwrite("cache/output_img.jpg",sample_img)
@@ -982,6 +1025,6 @@ class finitoApp(App):
         return layout
 
 if __name__ == '__main__':
-    root = appSelectorApp()
+    root = augmentorModeSelectorApp()
     root.run()
 
