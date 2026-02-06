@@ -749,27 +749,60 @@ class augmentor():
                 output = np.minimum(output, shadowed)
             return np.clip(output, 0, 255).astype(np.uint8)
         
+        if (parameters.augmentor_mode == 'sign'):
+            H, W = image.shape[:2]
+            base = image.copy().astype(np.float32)
+            output = base.copy()
+            for line in label_content:
+                line_content = line.split()
+                cx = float(line_content[1])* W
+                cy = float(line_content[2])* H
+                width = float(line_content[3])*W
+                height = float(line_content[4])*H
+                threshy = random.randint(40,100)
+                threshx = random.randint(40,100)
+                if parameters.shadow_mode == 'super':
+                    mode = random.choices(['circle','square'])[0]
+                else:
+                    mode = parameters.shadow_mode
 
-        # create mask
-        
-        # for _ in num_shadows:
-        #     pt1 = (np.random.randint(int((image.shape[1]/10)*2),int((image.shape[1]/10)*8)),
-        #            np.random.randint(image.shape[0]//2,image.shape[0]))
-        #     pt2 = (np.random.randint(pt1[0]-200,pt1[0]-50),
-        #            np.random.randint(pt1[1]-200,pt1[1]+200))
-        #     pt3 = (np.random.randint(pt1[0]+50,pt1[0]+200),
-        #            np.random.randint(pt1[1]-200,pt1[1]+200))
-        #     pts = np.array([pt1,pt2,pt3], dtype=np.int32)
-        #     cv2.fillPoly(mask, pts, 1.0)
+                if mode == 'circle':
+                    op = random.choices([-1,1])
+                    circle_y_center = cy+threshy*op[0]*height/100
+                    op = random.choices([-1,1])
+                    circle_x_center = cx+threshx*op[0]*width/100
+                    thresharea = random.randint(75,80)
+                    dist = np.sqrt((circle_y_center-cy)**2+(circle_x_center-cx)**2)
+                    radius = int(thresharea*dist/100)
+                    mask = np.zeros((H, W), dtype=np.float32)
+                    cv2.circle(mask, (int(circle_x_center),int(circle_y_center)), radius, 1.0, -1)
+                    if blur > 0:
+                        mask = cv2.GaussianBlur(mask, (blur, blur), 0)
 
-        #     # optional blur for soft shadow edges
-        #     if blur > 0:
-        #         mask = cv2.GaussianBlur(mask, (blur, blur), 0)
+                    shadow_factor = 1.0 - strength
+                    shadowed = base * (1 - mask + mask * shadow_factor)[:, :, None]
+                    output = np.minimum(output, shadowed)
+                if mode == 'square':
+                    op = random.choices([-1,1])
+                    square_y_center = cy+threshy*op[0]*height/100
+                    op = random.choices([-1,1])
+                    square_x_center = cx+threshx*op[0]*width/100
+                    thresharea = random.randint(75,80)
+                    dist = np.sqrt((square_y_center-cy)**2+(square_x_center-cx)**2)
+                    pt1 = (int(square_x_center-thresharea*dist/100),int(square_y_center-thresharea*dist/100))
+                    pt2 = (int(square_x_center-thresharea*dist/100),int(square_y_center+thresharea*dist/100))
+                    pt3 = (int(square_x_center+thresharea*dist/100),int(square_y_center+thresharea*dist/100))
+                    pt4 = (int(square_x_center+thresharea*dist/100),int(square_y_center-thresharea*dist/100))
+                    pts = np.array([pt1,pt2,pt3,pt4], dtype=np.int32)
+                    mask = np.zeros((H, W), dtype=np.float32)
+                    cv2.fillPoly(mask, [pts], 1.0)
+                    if blur > 0:
+                        mask = cv2.GaussianBlur(mask, (blur, blur), 0)
+                    shadow_factor = 1.0 - strength
+                    shadowed = base * (1 - mask + mask * shadow_factor)[:, :, None]
+                    output = np.minimum(output, shadowed)
 
-        #     # apply shadow
-        #     shadow_factor = 1.0 - strength
-        #     for c in range(3):
-        #         output[:, :, c] *= (1 - mask + mask * shadow_factor)
+            return np.clip(output, 0, 255).astype(np.uint8)
 
 class hueAugmentor (augmentor):
     def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):

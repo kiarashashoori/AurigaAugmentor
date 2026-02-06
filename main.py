@@ -1,15 +1,15 @@
-# import os
-# import logging
+import os
+import logging
 
-# logging.basicConfig(format="{asctime} - {levelname} - {message}",
-#      style="{",
-#      datefmt="%Y-%m-%d %H:%M",
-#      level=logging.INFO
-#  )
+logging.basicConfig(format="{asctime} - {levelname} - {message}",
+     style="{",
+     datefmt="%Y-%m-%d %H:%M",
+     level=logging.INFO
+ )
 
-# logging.getLogger("kivy").disabled = True
-# logging.getLogger("kivy.core").disabled = True
-# logging.getLogger("kivy.base").disabled = True
+logging.getLogger("kivy").disabled = True
+logging.getLogger("kivy.core").disabled = True
+logging.getLogger("kivy.base").disabled = True
 from kivy.app import App
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.label import Label
@@ -26,7 +26,7 @@ from kivy.uix.image import Image
 from kivy.core.window import Window
 from kivy.uix.slider import Slider
 from kivy.uix.progressbar import ProgressBar
-import time
+
 from kivy.clock import Clock
 from kivy.clock import mainthread
 import socket
@@ -39,16 +39,13 @@ import threading
 
 import parameters
 
-import os
-import logging
 
 
-
-# logging.basicConfig(format="{asctime} - {levelname} - {message}",
-#      style="{",
-#      datefmt="%Y-%m-%d %H:%M",
-#      level=logging.INFO
-#  )
+logging.basicConfig(format="{asctime} - {levelname} - {message}",
+     style="{",
+     datefmt="%Y-%m-%d %H:%M",
+     level=logging.INFO
+ )
 
     
 tb_values = parameters.path_values
@@ -739,6 +736,30 @@ class augmentViewerApp(App):
             strengthlbl = Label(text = 'strength',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos=(110,70))
             self.threshold_shadow_strength = Slider(min=0, max=100, value=self.shadow_strength,
                                             size_hint=(None, None), width=600, height=40,pos=(200,100))
+
+            if (parameters.augmentor_mode == 'sign'):
+                checkbox_layout = StackLayout(orientation ='lr-tb',pos=(110,20),size_hint=(None, None),size=(800, 300))
+                super_lbl = Label(text='super',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos_hint = (None,None))
+                self.super_chk = CheckBox(active=True,size_hint = (None,None),pos_hint = (None,None))
+                self.super_chk.id = 'super'
+                self.super_chk.bind(active = self.checkbox_is_active)
+                checkbox_layout.add_widget(super_lbl)
+                checkbox_layout.add_widget(self.super_chk)
+                circle_lbl = Label(text='circle',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos_hint = (None,None))
+                self.circle_chk = CheckBox(active=False,size_hint = (None,None),pos_hint = (None,None))
+                self.circle_chk.id = 'circle'
+                self.circle_chk.bind(active = self.checkbox_is_active)
+                checkbox_layout.add_widget(circle_lbl)
+                checkbox_layout.add_widget(self.circle_chk)
+                square_lbl = Label(text='square',size_hint = (None,None),size = ("150dp", "100dp"), halign='left',valign='middle',pos_hint = (None,None))
+                self.square_chk = CheckBox(active=False,size_hint = (None,None),pos_hint = (None,None))
+                self.square_chk.id = 'square'
+                self.square_chk.bind(active = self.checkbox_is_active)
+                checkbox_layout.add_widget(square_lbl)
+                checkbox_layout.add_widget(self.square_chk)
+
+
+                threshold_layout.add_widget(checkbox_layout)
             
             
         lbl = Label(text=parameters.active_checkboxs[0],pos=(20,100),size_hint = (None,None))
@@ -784,6 +805,17 @@ class augmentViewerApp(App):
 
         return self.screen_layout
     
+    def checkbox_is_active(self,checkbox,value):
+        if value == True:
+            if parameters.shadow_mode == 'super':
+                self.super_chk.active = False
+            elif parameters.shadow_mode == 'circle':
+                self.circle_chk.active = False
+            elif parameters.shadow_mode == 'square':
+                self.square_chk.active = False
+
+            parameters.shadow_mode = checkbox.id
+
     def right_clicked(self,instance):
         if self.i + 1< len(self.images):
             self.i += 1
@@ -1018,6 +1050,8 @@ class augmentProcessApp(App):
     @staticmethod
     def calculateAugmentedImagesQuantity():
         input_images_num = len(os.listdir(parameters.path_values[1]))
+        if parameters.augmentor_mode == 'sign':
+            input_images_num -= 1
         times = 0
         for augment in parameters.augment_process:
             times += augment[1]
