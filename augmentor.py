@@ -396,6 +396,31 @@ class augmentor():
                         parameters.counter += 1
             parameters.finish.remove('shadow')
             logging.info('[shadow] finised!')
+###################################################################################################
+###            HUE AUGMENT               ###   
+        if self.augment_type == 'hue':
+            ###copy and paste the labels###
+            label_filename_list = os.listdir(self.input_label_path)
+            for filename in label_filename_list:
+                if filename.endswith(".txt"):
+                    for i in range(self.times):
+                        label_output_filename = "HUE_"+ f"{i}_" + filename
+                        label_output_path = os.path.join(self.output_label_path , label_output_filename)
+                        shutil.copy2(os.path.join(self.input_label_path,filename),label_output_path)
+            ###augment the image###
+            img_filename_list = os.listdir(self.input_img_path)
+            for filename in img_filename_list:
+                if filename.endswith(".jpg"):
+                    img = cv2.imread(os.path.join(self.input_img_path,filename))
+                    for i in range(self.times):
+                        img_output_filename = "HUE_" + f"{i}_" + filename
+                        img_output_path = os.path.join(self.output_img_path,img_output_filename)
+                        augmented_image = augmentor.hueAugmentor(img,threshold,'augment')
+                        cv2.imwrite(img_output_path,augmented_image)   
+                        with lock:
+                            parameters.counter += 1
+            parameters.finish.remove('hue')
+            logging.info('[hue] finised!')
 
     @staticmethod
     def brightnessIncreasedAugmentor(img,brightness_threshold,mode):
@@ -804,6 +829,19 @@ class augmentor():
 
             return np.clip(output, 0, 255).astype(np.uint8)
 
-class hueAugmentor (augmentor):
-    def __init__(self, input_img_path, input_label_path, output_img_path, output_label_path, times):
-        super().__init__(input_img_path, input_label_path, output_img_path, output_label_path, times)
+    @staticmethod
+    def hueAugmentor(image,threshold,mode):
+        op = random.choices([1,-1])
+        hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+        thresh = threshold
+        if mode == 'augment':
+            if threshold < 50:
+                thresh = random.randint(5,threshold)
+            else:
+                thresh = random.randint(25,threshold)
+        thresh = op[0]*thresh
+        h = hsv[:,:,0].astype(np.int16)
+        h = h + thresh
+        hsv[:,:,0] = h.astype(np.uint8)
+        augmented_image = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
+        return augmented_image

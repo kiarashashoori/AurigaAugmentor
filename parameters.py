@@ -1,5 +1,5 @@
 #tb_values = [input_image,input_label,output_image,output_label]
-path_values = ['/home/tensorcore/Desktop/kiarash new (another copy)','/home/tensorcore/Desktop/kiarash new label (another copy)','/home/tensorcore/Desktop/backup','/home/tensorcore/Desktop/backup']
+path_values = ['','','','']
 active_checkboxs = []
 augmentor_mode = None 
 augment_process = []

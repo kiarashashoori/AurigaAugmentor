@@ -39,8 +39,6 @@ import threading
 
 import parameters
 
-
-
 logging.basicConfig(format="{asctime} - {levelname} - {message}",
      style="{",
      datefmt="%Y-%m-%d %H:%M",
@@ -63,10 +61,17 @@ class appSelectorApp(App):
                                     ,pos=(450,300),on_press=self.btn_clicked)
         DataAnalysis_btn = Button(text='Data analysis',size_hint = (None,None),size=("100dp","20dp")
                                     ,pos=(450,500),on_press=self.btn_clicked)
+        
+        image_layout = AnchorLayout(anchor_x='right', anchor_y='bottom')
+        auriga_image = Image(source = 'Auriga.png',size_hint = (None,None))
+        image_layout.add_widget(auriga_image)
+
         floatlayout = FloatLayout()
         floatlayout.add_widget(Datacleaner_btn)
         floatlayout.add_widget(DataAnalysis_btn)
         floatlayout.add_widget(Augmentor_btn)
+        floatlayout.add_widget(image_layout)
+
         return floatlayout
     def btn_clicked(self,instance):
         if instance.text == "Augmentor":
@@ -633,6 +638,8 @@ class augmentViewerApp(App):
         self.shadow_strength = 80
         self.shadow_blur = 11
 
+        self.hue_threhsold = 20
+
         self.i = 0
         possible_images = os.listdir(parameters.path_values[0])
         self.images = []
@@ -760,6 +767,10 @@ class augmentViewerApp(App):
 
 
                 threshold_layout.add_widget(checkbox_layout)
+        
+        if parameters.active_checkboxs[0] == 'hue':
+            self.threshold = Slider(min=0, max=179, value=self.hue_threhsold,
+                                    size_hint=(None, None), width=600, height=40,pos=(200,100))
             
             
         lbl = Label(text=parameters.active_checkboxs[0],pos=(20,100),size_hint = (None,None))
@@ -886,6 +897,9 @@ class augmentViewerApp(App):
             self.shadow_blur = val
             self.shadow_strength = int(self.threshold_shadow_strength.value)
         
+        if (parameters.active_checkboxs[0] == 'hue'):
+            self.hue_threhsold = int(self.threshold.value)
+        
         logging.info(f"AUGMENTOR:Your setting for '{parameters.active_checkboxs[0]}' changed!")
         
 
@@ -930,6 +944,9 @@ class augmentViewerApp(App):
                                                (self.sunlight_blur,self.sunlight_intensity/100,self.sunlight_nums)))
         if (parameters.active_checkboxs[0] == 'shadow'):
             parameters.augment_process.append(('shadow',1,(self.shadow_blur,self.shadow_strength/100)))
+        
+        if (parameters.active_checkboxs[0] == 'hue'):
+            parameters.augment_process.append(('hue',int(self.times.text),self.hue_threhsold))
 
         logging.info(f"AUGMENTOR:Your setting for '{parameters.active_checkboxs[0]}' saved!")
 
@@ -994,6 +1011,8 @@ class augmentViewerApp(App):
                 lines = f.readlines()
             sample_img = augmentor.shadowAugmentor(img,lines,self.shadow_blur,self.shadow_strength/100)
             
+        if (parameters.active_checkboxs[0] == 'hue'):
+            sample_img = augmentor.hueAugmentor(img,self.hue_threhsold,'sample')
         
         logging.info(f"AUGMENTOR:Showing sample image for '{parameters.active_checkboxs[0]}'")
         cv2.imwrite("cache/output_img.jpg",sample_img)
@@ -1050,8 +1069,9 @@ class augmentProcessApp(App):
     @staticmethod
     def calculateAugmentedImagesQuantity():
         input_images_num = len(os.listdir(parameters.path_values[1]))
-        if parameters.augmentor_mode == 'sign':
-            input_images_num -= 1
+        for filename in os.listdir(parameters.path_values[1]):
+            if filename.endswith('.yaml'):
+                input_images_num -= 1
         times = 0
         for augment in parameters.augment_process:
             times += augment[1]
@@ -1093,6 +1113,6 @@ class finitoApp(App):
         return layout
 
 if __name__ == '__main__':
-    root = augmentorModeSelectorApp()
+    root = appSelectorApp()
     root.run()
 
