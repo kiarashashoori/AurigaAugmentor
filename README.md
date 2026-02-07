@@ -38,7 +38,7 @@ cd AurigaAugmentor
 2. Install dependencies (Python 3.8+ recommended):
 
 ```bash
-pip install -r requirements.txt
+pip install kivy numpy pillow opencv-python
 ```
 
 ### Dependencies include:
@@ -52,8 +52,7 @@ Before running AurigaAugmentor, please make sure to:
 
 1. Download the `Auriga.png` image and place it in the project folder.
 2. Create a folder named `cache` in the project root (used for temporary processing).
-
-The app will not run correctly without these two steps.
+3. We recommend that at first run data cleaner app over your dataset.
 
 ## Usage
 1.Launch the application:
